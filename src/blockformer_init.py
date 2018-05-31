@@ -21,6 +21,8 @@ class Hero(SmartSprite):
                 self.vy = self.vy + 10
             pygame.event.clear()
         super(Hero, self).update()
+        self.vx = 0
+        self.vy = 0
 
 
 if __name__ == '__main__':

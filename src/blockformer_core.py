@@ -3,6 +3,7 @@ import pygame
 class Window:
     def __init__(self,width=700,height=500,screen_width=700,screen_height=500,frames_per_second=60,title="my game"):
         pygame.init()
+        pygame.key.set_repeat(1, 1000//frames_per_second)
         self.screen = pygame.display.set_mode((screen_width,screen_height))
         pygame.display.set_caption(title)
         self.width = width
