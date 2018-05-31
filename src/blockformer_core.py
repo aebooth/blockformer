@@ -104,8 +104,23 @@ class SmartSprite(pygame.sprite.Sprite):
         other.vx = other.vx + int(force[0]/other.mass)
         other.vy = other.vy + int(force[1] / other.mass)
 
+    # TODO
     def force_window_to_follow(self):
-        if self.rect.centerx - self.window.left_bound >= int(self.window.screen_width/2) and self.
+        destx = self.rect.x + self.rect.width // 2 - self.width // 2
+        if destx < 0:
+            self.rect.x = 0
+        elif destx <= self.xmax:
+            self.rect.x = destx
+        else:
+            self.rect.x = self.xmax
+
+        desty = sprite.y + sprite.rect.height//2 - self.height//2
+        if desty < 0:
+            self.rect.y = 0
+        elif desty <= self.ymax:
+            self.rect.y = desty
+        else:
+            self.rect.y = self.ymax
 
     def get_collide_vectors(self,others):
         collider_vectors = []
