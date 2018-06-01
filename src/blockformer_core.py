@@ -20,11 +20,17 @@ class Window:
         self.sprites = pygame.sprite.Group()
         self.non_rendering_sprites = pygame.sprite.Group()
 
-    def get_screen_x(self,x):
+    def screen_x(self,x):
         return x - self.left_bound
 
-    def get_screen_y(self,y):
+    def screen_y(self,y):
         return self.screen_height-(y-self.lower_bound)
+
+    def x(self,x):
+        return x
+
+    def y(self,y):
+        return self.height - y
 
     def advance_frame(self):
         pygame.display.flip()
@@ -85,21 +91,21 @@ class SmartSprite(pygame.sprite.Sprite):
     def __init__(self,window,x=0,y=0,width=1,height=1,mass=1):
         pygame.sprite.Sprite.__init__(self)
         self.window = window
-        self.rect = pygame.Rect(x,y,width,height)
+        self.rect = pygame.Rect(self.window.x(x),self.window.y(y),width,height)
         self.vx = 0
         self.vy = 0
         self.mass = mass
         self.drawable_sprite = pygame.sprite.Sprite()
-        self.drawable_sprite.rect = pygame.Rect(self.window.get_screen_x(self.rect.x),
-                                                self.window.get_screen_y(self.rect.y)-self.rect.height,
+        self.drawable_sprite.rect = pygame.Rect(self.window.screen_x(x),
+                                                self.window.screen_y(y)-self.rect.height,
                                                 self.rect.width,
                                                 self.rect.height)
         self.drawable_sprite.image = pygame.Surface((width,height))
         self.drawable_sprite.image.fill((0,0,0))
 
     def update(self, *args):
-        self.rect.move_ip(self.vx,self.vy)
-        self.drawable_sprite.rect.move_ip(self.vx,self.vy)
+        self.rect.move_ip(self.vx,-self.vy)
+        self.drawable_sprite.rect.move_ip(self.vx,-self.vy)
 
     def exert_force_on(self,other,force):
         other.vx = other.vx + int(force[0]/other.mass)
@@ -107,7 +113,7 @@ class SmartSprite(pygame.sprite.Sprite):
 
     # TODO
     def force_window_to_follow(self):
-        destx = self.rect.x + self.rect.width // 2 - self.width // 2
+        destx = self.rect.x + self.rect.width // 2 - self.window.width // 2
         if destx < 0:
             self.rect.x = 0
         elif destx <= self.xmax:
@@ -122,6 +128,15 @@ class SmartSprite(pygame.sprite.Sprite):
             self.rect.y = desty
         else:
             self.rect.y = self.ymax
+
+    def set_position(self,x,y):
+        self.rect.x = self.window.x(x)
+        self.rect.y = self.window.y(y)-self.rect.height
+        self.drawable_sprite.rect.x = self.window.screen_x(x)
+        self.drawable_sprite.rect.y = self.window.screen_y(y)-self.rect.height
+
+    def get_colliders(self,others):
+        return pygame.sprite.spritecollide(self, others, False)
 
     def get_collide_vectors(self,others):
         collider_vectors = []
@@ -252,19 +267,21 @@ class Landscape(SmartSprite):
 
 class Platform(SmartSprite):
     def __init__(self, window, color, x, y, width=20, height=20):
-       SmartSprite.__init__(self, x, y, width, height,1000000000)
-       self.window = window
-       self.color = color
-       self.image = pygame.Surface([width, height])
-       self.image.fill(self.color)
+        SmartSprite.__init__(self,window, x, y, width, height,1000000000)
+        self.window = window
+        self.color = color
+        self.drawable_sprite.image.fill(color)
+        print(self.rect)
+        print()
 
-    def hold_up_stuff(self,sprites):
-        colliders = pygame.sprite.spritecollide(self,sprites)
+
+    def update(self, *args):
+        colliders = self.get_colliders(self.window.sprites)
         for collider in colliders:
-            position = self.get_relative_position(collider)
-            if position[1] == 11 or position[1] == 12:
-                vector = self.get_vector_to(collider)
-                self.exert_force_on(collider,(0,collider.mass*vector[1]))
+            position = self.get_direction_to(collider)
+            print(collider)
+            if position == SmartSprite.N or position == SmartSprite.ON_TOP:
+                collider.vy = 0
 
 
 

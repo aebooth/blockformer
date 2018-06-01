@@ -6,23 +6,30 @@ from blockformer_core import *
 class Hero(SmartSprite):
     def __init__(self,window):
         SmartSprite.__init__(self,window,width=20,height=20)
+        self.frames = 0
 
     def update(self, *args):
+        self.frames = self.frames+1
         #print(pygame.key.get_focused())
         for event in pygame.event.get(pygame.KEYDOWN):
             key = pygame.key.name(event.key).lower()
             if key =="w":
-                self.vy = self.vy - 10
+                self.vy = self.vy + 10
             if key == "a":
                 self.vx = self.vx - 10
             if key == "d":
                 self.vx = self.vx + 10
             if key =="s":
-                self.vy = self.vy + 10
+                self.vy = self.vy - 10
             pygame.event.clear()
         super(Hero, self).update()
         self.vx = 0
         self.vy = 0
+        if self.frames%60 == 0:
+            print(self.rect)
+
+    def gravity(self):
+        pass
 
 
 if __name__ == '__main__':
