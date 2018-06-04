@@ -9,8 +9,6 @@ class Hero(SmartSprite):
         self.frames = 0
 
     def update(self, *args):
-        self.frames = self.frames+1
-        #print(pygame.key.get_focused())
         for event in pygame.event.get(pygame.KEYDOWN):
             key = pygame.key.name(event.key).lower()
             if key =="w":
@@ -22,11 +20,17 @@ class Hero(SmartSprite):
             if key =="s":
                 self.vy = self.vy - 10
             pygame.event.clear()
+        # for collider in self.get_colliders(self.window.platforms):
+        #     print("collider: " + str(collider.rect))
+        #     print("self: " + str(self.drawable_sprite.rect))
+        #     print()
+        for vector in self.get_collide_vectors(self.window.platforms):
+            if vector[1] < 0:
+                self.vy = self.vy - vector[1]
         super(Hero, self).update()
         self.vx = 0
         self.vy = 0
-        if self.frames%60 == 0:
-            print(self.rect)
+
 
     def gravity(self):
         pass

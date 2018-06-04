@@ -46,11 +46,11 @@ class Window:
         self.foreground.draw(self.screen)
 
     def update(self,*args):
-        self.non_rendering_sprites.update(*args)
         self.background.update(*args)
         self.platforms.update(*args)
         self.sprites.update(*args)
         self.foreground.update(*args)
+        self.non_rendering_sprites.update(*args)
 
     def scroll(self,dx,dy):
         for sprite in self.background.sprites():
@@ -136,27 +136,34 @@ class SmartSprite(pygame.sprite.Sprite):
         self.drawable_sprite.rect.y = self.window.screen_y(y)-self.rect.height
 
     def get_colliders(self,others):
-        return pygame.sprite.spritecollide(self, others, False)
+        colliders = []
+        #colliders.extend(pygame.sprite.spritecollide(self, others, False))
+        colliders.extend(pygame.sprite.spritecollide(self.drawable_sprite,others,False))
+        return colliders
+
 
     def get_collide_vectors(self,others):
         collider_vectors = []
-        collisions = pygame.sprite.spritecollide(self, others, False)
+        others_list = others.sprites()
+        collisions = self.get_colliders(others)
         for i in range(len(collisions)):
-            collider_vectors[i] = self.get_vector_to(others[i])
+            collider_vectors.append(self.get_vector_to(others_list[i]))
         return collider_vectors
 
     def get_collide_directions(self,others):
         collider_directions = []
-        collisions = pygame.sprite.spritecollide(self,others,False)
+        others_list = others.sprites()
+        collisions = self.get_colliders(others)
         for i in range(len(collisions)):
-            collider_directions[i] = self.get_direction_to(others[i])
+            collider_directions.append(self.get_direction_to(others_list[i]))
         return collider_directions
 
     def get_collide_positions(self,others):
         collider_positions = []
-        collisions = pygame.sprite.spritecollide(self, others, False)
+        others_list = others.sprites()
+        collisions = self.get_colliders(others)
         for i in range(len(collisions)):
-            collider_positions[i] = self.get_relative_position(others[i])
+            collider_positions.append(self.get_relative_position(others_list[i]))
         return collider_positions
 
 
@@ -251,7 +258,8 @@ class SmartSprite(pygame.sprite.Sprite):
             return -1
 
     def get_vector_to(self,other):
-        return (other.rect.centerx - self.rect.centerx, other.rect.centery - self.rect.centery)
+        return (other.rect.centerx - self.drawable_sprite.rect.centerx,
+                -other.rect.centery + self.drawable_sprite.rect.centery)
 
 
 class Landscape(SmartSprite):
@@ -271,17 +279,6 @@ class Platform(SmartSprite):
         self.window = window
         self.color = color
         self.drawable_sprite.image.fill(color)
-        print(self.rect)
-        print()
-
-
-    def update(self, *args):
-        colliders = self.get_colliders(self.window.sprites)
-        for collider in colliders:
-            position = self.get_direction_to(collider)
-            print(collider)
-            if position == SmartSprite.N or position == SmartSprite.ON_TOP:
-                collider.vy = 0
 
 
 
