@@ -2,22 +2,16 @@ from blockformer_core import *
 from blockformer_init import *
 
 
-window = Window(1400,500,300,300,60,"Blockformer")
+window = Window(1400,500,700,300,60,"Blockformer")
 
 #initialize variables
 
-#Landscape(self,color,x,y,width=20,height=20)
-landscape = Landscape(window,(0,255,0),0,0,window.width,100)
-window.background.add(landscape.drawable_sprite)
 
-platform = Platform(window,(100,100,100),120,120,100,20)
-window.platforms.add(platform.drawable_sprite)
+window.platforms.append(Platform(window,100,100,height=30))
+window.platforms.append(Platform(window,0,0,window.width,20))
 
-sprite = Hero(window)
-sprite.set_position(0,100)
-window.sprites.add(sprite.drawable_sprite)
+player = Player(window,0,40)
+window.player_sprites.append(player)
 
-window.non_rendering_sprites.add(sprite)
-window.non_rendering_sprites.add(platform)
 
 window.run()

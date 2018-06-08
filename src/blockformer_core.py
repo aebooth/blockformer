@@ -14,11 +14,11 @@ class Window:
         self.lower_bound = 0
         self.clock = pygame.time.Clock()
         self.frames_per_second = frames_per_second
-        self.background = pygame.sprite.Group()
-        self.foreground = pygame.sprite.Group()
-        self.platforms = pygame.sprite.Group()
-        self.sprites = pygame.sprite.Group()
-        self.non_rendering_sprites = pygame.sprite.Group()
+        self.background = []
+        self.foreground = []
+        self.platforms = []
+        self.enemies = []
+        self.player_sprites = []
 
     def screen_x(self,x):
         return x - self.left_bound
@@ -32,6 +32,9 @@ class Window:
     def y(self,y):
         return self.height - y
 
+    def update_drawings(self):
+        pass
+
     def advance_frame(self):
         pygame.display.flip()
         self.clock.tick(self.frames_per_second)
@@ -40,24 +43,31 @@ class Window:
         self.screen.fill((255,255,255))
 
     def draw(self):
-        self.background.draw(self.screen)
-        self.platforms.draw(self.screen)
-        self.sprites.draw(self.screen)
-        self.foreground.draw(self.screen)
+        for sprite in self.background:
+            sprite.draw()
+        for sprite in self.platforms:
+            sprite.draw()
+        for sprite in self.enemies:
+            sprite.draw()
+        for sprite in self.player_sprites:
+            sprite.draw()
+        for sprite in self.foreground:
+            sprite.draw()
 
-    def update(self,*args):
-        self.background.update(*args)
-        self.platforms.update(*args)
-        self.sprites.update(*args)
-        self.foreground.update(*args)
-        self.non_rendering_sprites.update(*args)
+    def update(self,**kwargs):
+        for sprite in self.background:
+            sprite.update(**kwargs)
+        for sprite in self.foreground:
+            sprite.update(**kwargs)
+        for sprite in self.player_sprites:
+            sprite.update(**kwargs)
+        for sprite in self.platforms:
+            sprite.update(**kwargs)
+        for sprite in self.enemies:
+            sprite.update(**kwargs)
 
-    def scroll(self,dx,dy):
-        for sprite in self.background.sprites():
-            sprite.drawable_sprite.rect.move_ip(dx,dy)
-        self.platforms.draw(self.screen)
-        self.sprites.draw(self.screen)
-        self.foreground.draw(self.screen)
+    def follow(self,player):
+        pass
 
     def run(self,*args):
         while (True):
@@ -77,209 +87,111 @@ class Window:
         pygame.quit()
 
 
-class SmartSprite(pygame.sprite.Sprite):
-    N = 0
-    NE = 1
-    E = 2
-    SE = 3
-    S = 4
-    SW = 5
-    W = 6
-    NW = 7
-    ON_TOP = -1
-
-    def __init__(self,window,x=0,y=0,width=1,height=1,mass=1):
-        pygame.sprite.Sprite.__init__(self)
+class Sprite:
+    def __init__(self,window,x,y,width,height,color):
         self.window = window
-        self.rect = pygame.Rect(self.window.x(x),self.window.y(y),width,height)
+        self.x = x
+        self.y = y
         self.vx = 0
         self.vy = 0
-        self.mass = mass
-        self.drawable_sprite = pygame.sprite.Sprite()
-        self.drawable_sprite.rect = pygame.Rect(self.window.screen_x(x),
-                                                self.window.screen_y(y)-self.rect.height,
-                                                self.rect.width,
-                                                self.rect.height)
-        self.drawable_sprite.image = pygame.Surface((width,height))
-        self.drawable_sprite.image.fill((0,0,0))
-
-    def update(self, *args):
-        self.rect.move_ip(self.vx,-self.vy)
-        self.drawable_sprite.rect.move_ip(self.vx,-self.vy)
-
-    def exert_force_on(self,other,force):
-        other.vx = other.vx + int(force[0]/other.mass)
-        other.vy = other.vy + int(force[1] / other.mass)
-
-    # TODO
-    def force_window_to_follow(self):
-        destx = self.rect.x + self.rect.width // 2 - self.window.width // 2
-        if destx < 0:
-            self.rect.x = 0
-        elif destx <= self.xmax:
-            self.rect.x = destx
-        else:
-            self.rect.x = self.xmax
-
-        desty = sprite.y + sprite.rect.height//2 - self.height//2
-        if desty < 0:
-            self.rect.y = 0
-        elif desty <= self.ymax:
-            self.rect.y = desty
-        else:
-            self.rect.y = self.ymax
-
-    def set_position(self,x,y):
-        self.rect.x = self.window.x(x)
-        self.rect.y = self.window.y(y)-self.rect.height
-        self.drawable_sprite.rect.x = self.window.screen_x(x)
-        self.drawable_sprite.rect.y = self.window.screen_y(y)-self.rect.height
-
-    def get_colliders(self,others):
-        colliders = []
-        #colliders.extend(pygame.sprite.spritecollide(self, others, False))
-        colliders.extend(pygame.sprite.spritecollide(self.drawable_sprite,others,False))
-        return colliders
-
-
-    def get_collide_vectors(self,others):
-        collider_vectors = []
-        others_list = others.sprites()
-        collisions = self.get_colliders(others)
-        for i in range(len(collisions)):
-            collider_vectors.append(self.get_vector_to(others_list[i]))
-        return collider_vectors
-
-    def get_collide_directions(self,others):
-        collider_directions = []
-        others_list = others.sprites()
-        collisions = self.get_colliders(others)
-        for i in range(len(collisions)):
-            collider_directions.append(self.get_direction_to(others_list[i]))
-        return collider_directions
-
-    def get_collide_positions(self,others):
-        collider_positions = []
-        others_list = others.sprites()
-        collisions = self.get_colliders(others)
-        for i in range(len(collisions)):
-            collider_positions.append(self.get_relative_position(others_list[i]))
-        return collider_positions
-
-
-
-    """
-    Returns a tuple with the following make-up (top left corner code , bottom right corner code)
-    
-           0     1     2     3
-        -------------------------
-    0   | 00  | 01  | 02 | 03  |
-        ------=============------
-    1   | 10  [ 11  | 12  ] 13  |
-        -------------------------
-    2   | 20  [ 21  | 22  ] 23  |
-        ------=============------
-    3   | 30  | 31  | 32  | 33  |
-        -------------------------
-    
-    The codes produced by this method are based on the box above. Codes 11,12,21,22 are within the 
-    actual rect of the sprite
-   
-    """
-
-    def get_relative_position(self,other):
-        x = -1
-        y = -1
-
-        if other.rect.left > self.rect.right:
-            x = 3
-        elif other.rect.left <= self.rect.right and other.rect.left > self.rect.centerx:
-            x = 2
-        elif other.rect.left <= self.rect.centerx and other.rect.left > self.rect.left:
-            x = 1
-        else:
-            x = 0
-
-        if other.rect.top > self.rect.bottom:
-            y = 30
-        elif other.rect.top <= self.rect.bottom and other.rect.top > self.rect.centery:
-            y = 20
-        elif other.rect.top <= self.rect.centery and other.rect.top > self.rect.top:
-            y = 10
-        else:
-            y = 0
-
-        tl = y+x
-
-        x = -1
-        y = -1
-
-        if other.rect.right > self.rect.right:
-            x = 3
-        elif other.rect.right <= self.rect.right and other.rect.right > self.rect.centerx:
-            x = 2
-        elif other.rect.right <= self.rect.centerx and other.rect.right > self.rect.left:
-            x = 1
-        else:
-            x = 0
-
-        if other.rect.bottom > self.rect.bottom:
-            y = 30
-        elif other.rect.bottom <= self.rect.bottom and other.rect.bottom > self.rect.centery:
-            y = 20
-        elif other.rect.bottom <= self.rect.centery and other.rect.bottom > self.rect.top:
-            y = 10
-        else:
-            y = 0
-
-        br = y+x
-
-        return (tl,br)
-
-    def get_direction_to(self,other):
-        (tl,br) = self.get_relative_position(other)
-        if (tl / 10 <= 1 and tl % 10 <= 1) and (br / 10 <= 1 and br % 10 <= 1):
-            return SmartSprite.NW
-        elif (tl / 10 >= 2 and tl % 10 >= 2) and (br / 10 >= 2 and br % 10 >= 2):
-            return SmartSprite.SE
-        elif (tl / 10 >= 2 and tl % 10 <= 1) and (br / 10 >= 2 and br % 10 <= 1):
-            return SmartSprite.SW
-        elif (tl / 10 <= 1 and tl % 10 >= 2) and (br / 10 <= 1 and br % 10 >= 2):
-            return SmartSprite.NE
-        elif tl / 10 <= 1 and br / 10 <= 1:
-            return SmartSprite.N
-        elif tl / 10 >= 2 and br / 10 >= 2:
-            return SmartSprite.S
-        elif tl % 10 <= 1 and br % 10 <= 1:
-            return SmartSprite.W
-        elif tl % 10 >= 2 and br % 10 >= 2:
-            return SmartSprite.E
-        else:
-            return -1
-
-    def get_vector_to(self,other):
-        return (other.rect.centerx - self.drawable_sprite.rect.centerx,
-                -other.rect.centery + self.drawable_sprite.rect.centery)
-
-
-class Landscape(SmartSprite):
-    def __init__(self,window,color,x,y,width=20,height=20):
-        SmartSprite.__init__(self,window,x,y,width,height)
+        self.width = width
+        self.height = height
         self.color = color
-        self.drawable_sprite.image.fill(self.color)
+        self.rect = pygame.Rect(window.screen_x(x), window.screen_y(y), width, height)
+        self.image = pygame.Surface((width,height))
+        self.image.fill(color)
 
-    def update(self,color):
-        self.color = color
-        self.image.fill(self.color)
+    def move(self,dx,dy):
+        self.x = self.x + dx
+        self.y = self.y + dy
+        # print(self.vx)
+        # print(self.vy)
+        # print()
+        self.rect.x = self.window.screen_x(self.x)
+        self.rect.y = self.window.screen_y(self.y)
+
+    def draw(self):
+        self.window.screen.blit(self.image,self.rect)
+
+    def collide(self, sprites):
+        pass
+
+    def on_collision(self,sprite):
+        pass
+
+    def update(self,**kwargs):
+        pass
+
+class Player(Sprite):
+    def __init__(self,window,x,y,width=20,height=40,color=(0,0,0)):
+        Sprite.__init__(self,window,x,y,width,height,color)
+        self.current_num_jumps = 0
+
+    def gravity(self):
+        MAX_DOWNWARD = -10
+        if self.vy > MAX_DOWNWARD:
+            self.vy = self.vy - 1
+        else:
+            self.vy = MAX_DOWNWARD
+
+    def friction(self):
+        if self.vx > 1 or self.vx < -1:
+            self.vx = self.vx * .8
+        else:
+            self.vx = 0
+
+    def update(self,**kwargs):
+        for event in pygame.event.get(pygame.KEYDOWN):
+            key = pygame.key.name(event.key).lower()
+            if key == "w":
+                if self.current_num_jumps <= 7:
+                    self.vy = 10
+                    self.current_num_jumps = self.current_num_jumps + 1
+            if key == "a":
+                self.vx = -10
+            if key == "d":
+                self.vx = 10
+            if key == "s":
+                self.vy = -10
+            pygame.event.clear()
+        self.gravity()
+        self.friction()
+        self.move(self.vx,self.vy)
+
+    def on_collision(self,sprite):
+        if isinstance(sprite,Platform):
+            self.current_num_jumps = 0
 
 
-class Platform(SmartSprite):
-    def __init__(self, window, color, x, y, width=20, height=20):
-        SmartSprite.__init__(self,window, x, y, width, height,1000000000)
-        self.window = window
-        self.color = color
-        self.drawable_sprite.image.fill(color)
+class Platform(Sprite):
+    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0)):
+        Sprite.__init__(self,window,x,y,width,height,color)
 
+    def collide(self, sprites):
+        for sprite in sprites:
+            if sprite.rect.colliderect(self.rect):
+                sprite.on_collision(self)
+                #Move sprite to top
+                if sprite.rect.bottom <= self.rect.centery:
+                    sprite.move(0,-self.rect.top + sprite.rect.bottom)
+                    sprite.vy = 0
+                #Move sprite to bottom
+                if sprite.rect.top >= self.rect.centery:
+                    sprite.move(0, -self.rect.bottom + sprite.rect.top)
+                    sprite.vy = 0
+
+                if sprite.rect.centery >= self.rect.top and sprite.rect.centery <= self.rect.bottom:
+                    #Move sprite to left
+                    if sprite.rect.centerx <= self.rect.left:
+                        sprite.move(self.rect.left - sprite.rect.right,0)
+                        sprite.vx = 0
+                    #Move sprite to right
+                    elif sprite.rect.centerx >= self.rect.right:
+                        sprite.move(self.rect.right - sprite.rect.left,0)
+                        sprite.vx = 0
+
+    def update(self,**kwargs):
+        self.collide(self.window.player_sprites)
 
 
 if __name__ == '__main__':
