@@ -75,7 +75,7 @@ class Window:
         self.current_level().move_all()
 
     def start(self,*args):
-        while (True):
+        while True:
             if len(pygame.event.get(pygame.QUIT)) > 0:
                 break
 
@@ -201,6 +201,23 @@ class Player(Sprite):
 
         if isinstance(sprite,MovingPlatform):
             self.move(sprite.motion.vx,sprite.motion.vy)
+
+class BadGuy(Sprite):
+    def __init__(self,window,x,y,width=20,height=40,color=(255,0,0)):
+        Sprite.__init__(self,window,x,y,width,height,color)
+
+    def collide(self, sprites):
+        for sprite in sprites:
+            if sprite.rect.colliderect(self.rect):
+                sprite.on_collision(self)
+                self.on_collision(sprite)
+
+    def on_collision(self,sprite):
+        if isinstance(sprite,Player):
+            pygame.quit()
+
+    def update(self,**kwargs):
+        self.collide([self.window.player_sprite])
 
 
 class Platform(Sprite):
