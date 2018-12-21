@@ -203,8 +203,9 @@ class Player(Sprite):
             self.move(sprite.motion.vx,sprite.motion.vy)
 
 class BadGuy(Sprite):
-    def __init__(self,window,x,y,width=20,height=40,color=(255,0,0)):
+    def __init__(self,window,x,y,width=20,height=40,color=(255,0,0),motion=None):
         Sprite.__init__(self,window,x,y,width,height,color)
+        self.motion = motion
 
     def collide(self, sprites):
         for sprite in sprites:
@@ -217,7 +218,12 @@ class BadGuy(Sprite):
             pygame.quit()
 
     def update(self,**kwargs):
+        print((self.x,self.window.y(self.y)))
+        self.motion.move(self)
+        # if self.motion is not None:
+        #     self.motion.move(self)
         self.collide([self.window.player_sprite])
+        
 
 
 class Platform(Sprite):
@@ -253,13 +259,31 @@ class Platform(Sprite):
         self.collide([self.window.player_sprite])
 
 class MotionSpecification:
-    def __init__(self,window,left,right,top,bottom,vxi,vyi):
+    def __init__(self,window,left,right,bottom,top,vxi,vyi):
         self.left = left
         self.right = right
         self.top = window.y(top)
         self.bottom = window.y(bottom)
         self.vx = vxi
         self.vy = vyi
+    
+    def move(self,sprite):
+        sprite.move(self.vx,self.vy)
+
+        if sprite.x > self.right - sprite.width:
+            sprite.move(-self.vx,0)
+            self.vx = -self.vx
+        elif sprite.x < self.left:
+            sprite.move(-self.vx, 0)
+            self.vx = -self.vx
+
+        if sprite.y > self.bottom - sprite.height:
+            sprite.move(0,-self.vy)
+            self.vy = -self.vy
+        elif sprite.y < self.top:
+            sprite.move(0,-self.vy)
+            self.vy = -self.vy
+
 
 class MovingPlatform(Platform):
     def __init__(self,window,motion,x,y,width=80,height=20,color=(0,255,0)):
@@ -267,20 +291,7 @@ class MovingPlatform(Platform):
         self.motion = motion
 
     def update(self,**kwargs):
-        self.move(self.motion.vx,self.motion.vy)
-        if self.x > self.motion.right - self.width:
-            self.move(-self.motion.vx,0)
-            self.motion.vx = -self.motion.vx
-        elif self.x < self.motion.left:
-            self.move(-self.motion.vx, 0)
-            self.motion.vx = -self.motion.vx
-
-        if self.y > self.motion.bottom - self.height:
-            self.move(0,-self.motion.vy)
-            self.motion.vy = -self.motion.vy
-        elif self.y < self.motion.top:
-            self.move(0,-self.motion.vy)
-            self.motion.vy = -self.motion.vy
+        self.motion.move(self)
         super().collide([self.window.player_sprite])
 
 
