@@ -1,4 +1,7 @@
 import pygame
+import random
+from pygame.locals import (K_SPACE, K_a, K_d, K_s, K_w, K_b)
+
 
 class Window:
     def __init__(self,width=700,height=500,screen_width=700,screen_height=500,frames_per_second=60,title="my game"):
@@ -152,44 +155,70 @@ class Sprite:
         pass
 
 class Player(Sprite):
-    def __init__(self,window,x,y,width=20,height=40,color=(0,0,0)):
+    def __init__(self,window,x,y,width=20,height=40,color=(200,0,255)):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.current_num_jumps = 0
-
+        self.max_forward = 5
     def gravity(self):
         MAX_DOWNWARD = -10
         if self.vy > MAX_DOWNWARD:
-            self.vy = self.vy - 1
+            self.vy = self.vy - .5
         else:
             self.vy = MAX_DOWNWARD
 
     def friction(self):
         if self.current_num_jumps == 0:
             if self.vx > 1 or self.vx < -1:
-                self.vx = self.vx * .8
+                self.vx = self.vx * .88
             else:
                 self.vx = 0
-
+        if self.current_num_jumps >= 0:
+            if self.vx > self.max_forward:
+                self.vx = self.max_forward
+            if self.vx < -self.max_forward:
+                self.vx = -self.max_forward
 
     def update(self,**kwargs):
-        for event in pygame.event.get(pygame.KEYDOWN):
-            key = pygame.key.name(event.key).lower()
-            if key == "w":
-                if self.current_num_jumps <= 7:
+        for event in pygame.event.get(): pass
+        key = pygame.key.get_pressed()
+        if key[K_SPACE] or key[K_w]:
+            if self.current_num_jumps <= 7:
+                if self.vx > 6 or self.vx < -6:
+                    self.vy = 11
+                    self.current_num_jumps = self.current_num_jumps + 1
+                else:
                     self.vy = 10
                     self.current_num_jumps = self.current_num_jumps + 1
-            if key == "a":
+        if key[K_a]:
+            if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = -5
+                    self.vx = self.vx - 1.2
                 else:
-                    self.vx = -2
-            if key == "d":
+                    self.vx = self.vx - .3
+            elif self.current_num_jumps <= 1:
+                self.vx = self.vx - 1.05
+            else:
+                self.vx = self.vx - .5
+        if key[K_d]:
+            if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = 5
+                    self.vx = self.vx + 1.2
                 else:
-                    self.vx = 2
-            if key == "s":
-                self.vy = -10
+                    self.vx = self.vx + .3
+            elif self.current_num_jumps <= 1:
+                self.vx = self.vx + 1.05
+            else:
+                self.vx = self.vx + .5
+        if key[K_s]:
+            if self.current_num_jumps == 0:
+                self.vx *= .75
+            else:
+                self.vy = -12
+                self.current_num_jumps = 8
+        if key[K_b]:
+            self.max_forward = 10
+        elif not key[K_b]:
+            self.max_forward = 6
             pygame.event.clear()
         self.gravity()
         self.friction()
@@ -218,12 +247,10 @@ class BadGuy(Sprite):
             pygame.quit()
 
     def update(self,**kwargs):
-        print((self.x,self.window.y(self.y)))
         self.motion.move(self)
         # if self.motion is not None:
         #     self.motion.move(self)
         self.collide([self.window.player_sprite])
-        
 
 
 class Platform(Sprite):
@@ -253,8 +280,23 @@ class Platform(Sprite):
                         sprite.move(self.rect.right - sprite.rect.left,0)
                         sprite.vx = 0
 
+    def update(self,**kwargs):
+        self.collide([self.window.player_sprite])
 
+class DeathBarrier(Sprite):
+    def __init__(self,window,x,y,width=80,height=30,color=(0,200,0)):
+        Sprite.__init__(self,window,x,y,width,height,color)
 
+    def collide(self, sprites):
+        for sprite in sprites:
+            if sprite.rect.colliderect(self.rect):
+                sprite.on_collision(self)
+                self.on_collision(sprite)
+
+    def on_collision(self,sprite):
+        if isinstance(sprite,Player):
+            pygame.quit()
+            
     def update(self,**kwargs):
         self.collide([self.window.player_sprite])
 
