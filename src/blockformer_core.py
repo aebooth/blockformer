@@ -51,9 +51,13 @@ class Window:
         self.hbar_sprite.draw()
 
     def update(self, **kwargs):
-        self.hbar_sprite.update(**kwargs)
         self.player_sprite.update(**kwargs)
         self.current_level().update(**kwargs)
+        for i in range(10):
+            self.player_sprite.move(self.player_sprite.vx//10,self.player_sprite.vy//10)
+            for sprite in self.current_level().sp
+
+        self.hbar_sprite.update(**kwargs)
         self.follow_player()
 
     def change_level(self, level_delta = 1):
@@ -267,8 +271,6 @@ class BadGuy(Sprite):
 
     def update(self,**kwargs):
         self.motion.move(self)
-        # if self.motion is not None:
-        #     self.motion.move(self)
         self.collide([self.window.player_sprite])
 
 class Hbar(Sprite):
