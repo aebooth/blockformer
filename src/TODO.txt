@@ -1,7 +1,7 @@
 Make it so Level's move_all() method actually calls 
 move on all sprites managed by the level. 
 
-Change all the MotionSpecification-using classes to 
+Change all the MotionSpecification-using classes 
 so that their move method is overridden to use the 
 motion from the MotionSpecification so that move_all()
 from Level works as intended
