@@ -1,20 +1,2 @@
-Make it so Level's move_all() method actually calls 
-move on all sprites managed by the level. 
-
-Change all the MotionSpecification-using classes 
-so that their move method is overridden to use the 
-motion from the MotionSpecification so that move_all()
-from Level works as intended
-
-Check into callability of collide() on all sprites
-
-Call move()/move_all() and then collide() on all 
-sprites 10x per frame. Stop if there is a collision.
-Velocities need to be divided by 10. At the end if 
-you've made it through all 10 iterations, make the 
-sprites move the remaining amount:
-    vx - vx // 10 * 10 (for example)
-and check collisions one more time
-
 Fix collide() for platform now that we will have incremental
 movement.

@@ -287,7 +287,9 @@ class Player(Sprite):
             return True
 
         if isinstance(sprite,MovingPlatform):
-            self.move(sprite.motion.vx,sprite.motion.vy)
+            self.vx = self.motion.vx
+            self.vy = self.motion.vy
+            self.move()
             return True
 
         return False
@@ -330,6 +332,7 @@ class Platform(Sprite):
     def __init__(self,window,x,y,width=80,height=20,color=(0,255,0)):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.height = height
+    
     def collide(self, sprites):
         return False
         # for sprite in sprites:
@@ -441,7 +444,7 @@ class MotionSpecification:
         self.vx = vxi
         self.vy = vyi
     
-    def move(self,sprite):
+    def move_sprite(self,sprite):
         sprite.move(self.vx,self.vy)
 
         if sprite.x > self.right - sprite.width:
@@ -465,8 +468,10 @@ class MovingPlatform(Platform):
         self.motion = motion
 
     def update(self,**kwargs):
-        self.motion.move(self)
         super().collide([self.window.player_sprite])
+
+    def move(self):
+        self.motion.move(self)
 
 
 
