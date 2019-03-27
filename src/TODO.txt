@@ -1,2 +1,31 @@
 Fix collide() for platform now that we will have incremental
 movement.
+
+Make collisions follow these rules:
+-Walls
+    Player.left < Plat.right (Colliding)
+    PLayer.right > Plat.left (Colliding)
+    Last position of Player.top is above Plat.bottom
+    Last position of Player.bottom is below Plat.top
+    Move Player to last position (Based on vx)
+    Set Player.vx to 0
+-Floors
+    Player.bottom < Plat.top (Colliding)
+    Last position of Player.bottom is above Plat.top
+    Move Player to last position (Based on vy)
+    Set Player.vy to 0
+-Ceilings
+    Player.top > Plat.bottom (Colliding)
+    Last position of Player.top is below Plat.bottom
+    Move Player to last position (Based on vy)
+    Set Player.vy to 0
+
+make a move command that does take values again
+
+Make collide() return a collision code or Nothing
+
+Make on_collision() take both the sprite and the 
+    collision code as parameters
+
+Use new collide() and on_collision() to make the Player
+follow the above rules when it collides with a platform
