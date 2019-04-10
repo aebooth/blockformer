@@ -24,7 +24,7 @@ make a move command that does take values again
 
 Make collide() return a collision code or Nothing
 
-Make on_collision() take both the sprite and the 
+(Damon) Make on_collision() take both the sprite and the 
     collision code as parameters
 
 Use new collide() and on_collision() to make the Player

@@ -12,7 +12,7 @@ class Window:
         self.width = width
         self.height = height
         self.screen_width = screen_width
-        self.screen_height= screen_height
+        self.screen_height = screen_height
         self.left_bound = 0
         self.lower_bound = 0
         self.clock = pygame.time.Clock()
@@ -178,8 +178,8 @@ class Sprite:
         self.image.fill(color)
 
     def move(self):
-        self.x = self.x + vx
-        self.y = self.y + vy
+        self.x = self.x + self.vx
+        self.y = self.y + self.vy
         self.rect.x = self.window.screen_x(self.x)
         self.rect.y = self.window.screen_y(self.y)
 
@@ -190,7 +190,15 @@ class Sprite:
         return False
 
     def on_collision(self,sprite):
-        return False
+        #Floor and Ceiling
+        if self.rect.collide == bt or self.rect.collide == tb:
+            self.y = -self.vy/10
+            self.vy = 0
+
+        #Left Wall and Right Wall
+        if self.rect.collide == rl or self.rect.collide == lr:
+            self.x = -self.vx/10
+            self.vx = 0
 
     def update(self,**kwargs):
         pass
@@ -232,7 +240,7 @@ class Player(Sprite):
             pygame.quit()
 
     def update(self,**kwargs):
-        print("Health:",self.health,"Breath:",self.breath,"Coord:",self.x,self.y,"Speed:",self.vx,self.vy)
+        # print("Health:",self.health,"Breath:",self.breath,"Coord:",self.x,self.y,"Speed:",self.vx,self.vy)
         for event in pygame.event.get(): pass
         key = pygame.key.get_pressed()
         if key[K_y]:
@@ -316,7 +324,7 @@ class BadGuy(Sprite):
         return False
 
     def update(self,**kwargs):
-        self.motion.move(self)
+        # self.motion.move(self)
         self.collide([self.window.player_sprite])
 
 class Hbar(Sprite):
@@ -460,7 +468,6 @@ class MotionSpecification:
         elif sprite.y < self.top:
             sprite.move(0,-self.vy)
             self.vy = -self.vy
-
 
 class MovingPlatform(Platform):
     def __init__(self,window,motion,x,y,width=80,height=20,color=(0,255,0)):
