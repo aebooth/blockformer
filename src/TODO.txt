@@ -1,6 +1,3 @@
-Fix collide() for platform now that we will have incremental
-movement.
-
 Make collisions follow these rules:
 -Walls
     Player.left < Plat.right (Colliding)
@@ -19,13 +16,6 @@ Make collisions follow these rules:
     Last position of Player.top is below Plat.bottom
     Move Player to last position (Based on vy)
     Set Player.vy to 0
-
-make a move command that does take values again
-
-Make collide() return a collision code or Nothing
-
-Make on_collision() take both the sprite and the 
-    collision code as parameters
 
 Use new collide() and on_collision() to make the Player
 follow the above rules when it collides with a platform
