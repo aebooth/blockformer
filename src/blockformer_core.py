@@ -66,7 +66,7 @@ class Window:
             sprite.vx //= 10
             sprite.vy //= 10
 
-        num_substeps_completed = 0    
+        num_substeps_completed = 0
         for i in range(10):
             self.player_sprite.move()
             self.current_level().move_all()
@@ -190,21 +190,29 @@ class Sprite:
         return False
 
     def on_collision(self,sprite):
+        #Corners
+        if self.rect.collide == brtl or self.rect.collide == bltr:
+            if abs(self.vx) > abs(self.vy):
+                self.x += self.vx/10
+                self.vy = 0
+            else:
+                self.y += self.vy/10
+                self.vx = 0
         #Floor and Ceiling
-        if self.rect.collide == bt or self.rect.collide == tb:
-            self.y = -self.vy/10
+        if self.rect.collide == bbtt or self.rect.collide == ttbb:
+            self.x -= self.vx/10
             self.vy = 0
-
         #Left Wall and Right Wall
-        if self.rect.collide == rl or self.rect.collide == lr:
-            self.x = -self.vx/10
+        if self.rect.collide == rrll or self.rect.collide == llrr:
+            self.y += self.vy/10
             self.vx = 0
+        
 
     def update(self,**kwargs):
         pass
 
 class Player(Sprite):
-    def __init__(self,window,x,y,width=20,height=40,color=(200,0,255),health=100):
+    def __init__(self,window,x,y,width=20,height=40,color=(200,0,255),health=200):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.current_num_jumps = 0
         self.max_upward = 10
@@ -234,8 +242,8 @@ class Player(Sprite):
                 self.vx = -self.max_forward
 
     def dead(self):
-        if self.health > 100:
-            self.health = 100
+        if self.health > 200:
+            self.health = 200
         if self.health <= 0:
             pygame.quit()
 
@@ -324,7 +332,7 @@ class BadGuy(Sprite):
         return False
 
     def update(self,**kwargs):
-        # self.motion.move(self)
+        self.motion.move(self)
         self.collide([self.window.player_sprite])
 
 class Hbar(Sprite):
@@ -332,7 +340,7 @@ class Hbar(Sprite):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.width = 0
     def stat_display(self,Player):
-        self.width = 100
+        self.width = 200
     def update(self, **kwargs):
         self.stat_display([self.window.player_sprite])
 
