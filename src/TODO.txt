@@ -17,15 +17,5 @@ Make collisions follow these rules:
     Move Player to last position (Based on vy)
     Set Player.vy to 0
 
-<<<<<<< HEAD
-make a move command that does take values again
-
-Make collide() return a collision code or Nothing
-
-(Damon) Make on_collision() take both the sprite and the 
-    collision code as parameters
-
-=======
->>>>>>> boof
 Use new collide() and on_collision() to make the Player
 follow the above rules when it collides with a platform
