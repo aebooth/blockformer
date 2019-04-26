@@ -1,13 +1,13 @@
 from blockformer_core import *
 from blockformer_init import *
 
-window = Window(6000,600,720,480,60,"The Platforms")
+window = Window(6000,6000,720,480,60,"The Platforms")
 
 #initialize variables
 
-window.current_level().platforms.append(Water(window,1300,200,2000,400,color=(0,0,75)))
+window.current_level().platforms.append(Water(window,1300,1200,2000,window.height,color=(0,0,75)))
 window.current_level().platforms.append(DeathBarrier(window,-window.width/2,-200,window.width*2,height=window.height,color=(255,0,0)))
-window.current_level().platforms.append(Bubbles(window,1540,200,vx=0,vy=1,width=40,height=200,color=(0,50,200)))
+window.current_level().platforms.append(Bubbles(window,1540,1000,vx=0,vy=1,width=40,height=1000,color=(0,50,200)))
 window.current_level().platforms.append(Heal(window,1040,100,20,20,color=(150,200,0)))
 window.current_level().platforms.append(Heal(window,1120,100,20,20,color=(150,200,0)))
 
@@ -39,8 +39,8 @@ bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
 bad_motion = MotionSpecification(window,260,260,50,100,0,2)
 window.current_level().enemies.append(BadGuy(window,100,400,motion=bad_motion))
 
-window.hbar_sprite = HUD(window,5,5,input="health")
-window.sbar_sprite = HUD(window,5,5,height=10,input="shield",color=(0,0,100))
-window.bbar_sprite = HUD(window,5,25,height=10,input="breath",color=(0,0,255))
+window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
+window.sbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))
+window.bbar_sprite = HUD(window,5,25,height=10,direction="horzr",maxwidth=300,input="breath",color=(0,0,255))
 
 window.start()

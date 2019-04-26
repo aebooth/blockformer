@@ -240,7 +240,7 @@ class Player(Sprite):
             self.shield = 100
         if self.shield < 0:
             self.shield = 0
-        print("HP:",self.health,"Shield:",self.shield,self.shield_timer)
+        # print("HP:",self.health,"Shield:",self.shield,self.shield_timer)
         for event in pygame.event.get(): pass
         key = pygame.key.get_pressed()
         if key[K_q]:
@@ -309,8 +309,9 @@ class TestSprite(pygame.sprite.Sprite):
     def __init__(self):
         super(TestSprite, self).__init__()
         self.images = []
-        self.images.append(load_image('thump_stand_r96.png'))
-        self.images.append(load_image('thump_stand_l96.png'))
+        self.images.append(load_image('stryf_modstand_rhr.png'))
+        # self.images.append(load_image('thump_stand_r96.png'))
+        # self.images.append(load_image('thump_stand_l96.png'))
 
         self.index = 0
         self.image = self.images[self.index]
@@ -351,16 +352,22 @@ class BadGuy(Sprite):
         self.collide([self.window.player_sprite])
 
 class HUD(Sprite):
-    def __init__(self,window,x,y,input,width=200,height=20,color=(0,200,0)):
+    def __init__(self,window,x,y,direction,maxwidth,input,width=200,height=20,color=(0,200,0)):
         Sprite.__init__(self,window,x,y,width,height,color)
+        self.x = x
+        self.y = y
+        self.maxwidth = maxwidth
         self.width = width
         self.input = input
+        self.direction = direction
     def stat_display(self,sprites):
         for sprite in sprites:
             if self.input == "health":
                 self.width = sprite.health
                 if self.width > 200:
                     self.width = 200
+                if self.direction == "horzl":
+                    self.x -= self.x + self.maxwidth - self.width
             if self.input == "shield":
                 self.width = sprite.shield
                 if sprite.shield <= 9:
@@ -401,8 +408,8 @@ class Platform(Sprite):
                 self.air_timer = 0
                 sprite.on_collision(self)
                 #Move sprite to top
-                if sprite.rect.bottom <= self.rect.bottom and sprite.rect.bottom - sprite.vy < self.rect.bottom:
-                    sprite.move(0,sprite.vy)
+                if sprite.rect.bottom <= self.rect.bottom or sprite.rect.bottom >= self.rect.bottom:
+                    sprite.move(0,self.rect.bottom - sprite.rect.top)
                     sprite.vy = 0
                 #Move sprite to bottom
                 if sprite.rect.top >= self.rect.centery:
