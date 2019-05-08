@@ -54,41 +54,16 @@ class Window:
         self.player_sprite.update(**kwargs)
         self.current_level().update(**kwargs)
         
-        collisions = self.player_sprite.collide(self.current_level().sprites())
-        for collision in collisions:
-            self.fine_collide(collision.sprite)
+        sprite_list = self.current_level().sprites()
+        collision_indices = self.player_sprite.rect.collidelistall(sprite_list)
+        for index in collision_indices:
+            collision = self.player_sprite.collide(sprite_list[index])
+            if collision is not None:
+                self.player_sprite.on_collision(collision)
+                sprite_list[index].on_collision(collision)
 
         self.hbar_sprite.update(**kwargs)
         self.follow_player()
-
-    def fine_collide(self,sprite):
-        if self.player_sprite.rect.colliderect(sprite.rect):
-            player_old_vx = self.player_sprite.vx
-            player_old_vy = self.player_sprite.vy
-            self.player_sprite.vx //= 10
-            self.player_sprite.vy //= 10
-            sprite_old_vxs = sprite.vx
-            sprite_old_vys = sprite.vy
-            sprite.vx //= 10
-            sprite.vy //= 10
-
-            for i in range(10):
-                self.player_sprite.move()
-                sprite.move()
-                self.player_sprite.collide(self.current_level().sprites())
-
-            self.player_sprite.vx = player_old_vx - 10 * self.player_sprite.vx
-            self.player_sprite.vy = player_old_vy - 10 * self.player_sprite.vy
-            sprite.vx = sprite_old_vxs - 10 * sprite.vx
-            sprite.vy = sprite_old_vys - 10 * sprite.vy
-
-            self.player_sprite.move()
-            sprite.move()
-
-            self.player_sprite.vx = player_old_vx
-            self.player_sprite.vy = player_old_vy
-            sprite.vx = sprite_old_vxs
-            sprite.vy = sprite_old_vys
 
     def change_level(self, level_delta = 1):
         self.current_level_index = self.current_level_index + level_delta
@@ -189,52 +164,84 @@ class Sprite:
     def draw(self):
         self.window.screen.blit(self.image,self.rect)
 
-    def collide(self, sprites):
-        collisions = []
-        for sprite in sprites:
-            if self.rect.colliderect(sprite.rect):
-                self.move(-self.vx,-self.vy)
-                sprite.move(-sprite.vx,-sprite.vy)
-                #corner cases
-                #top left
-                if self.rect.bottom <= sprite.rect.top and self.rect.right <= sprite.rect.left:
-                    collisions.append(CollisionEvent(sprite,"brtl"))
-                #top right
-                elif self.rect.bottom <= sprite.rect.top and self.rect.left >= sprite.rect.right:
-                    collisions.append(CollisionEvent(sprite,"bltr"))
-                #bottom left
-                elif self.rect.top >= sprite.rect.bottom and self.rect.right <= sprite.rect.left:
-                    collisions.append(CollisionEvent(sprite,"trbl"))
-                #bottom right
-                elif self.rect.top >= sprite.rect.bottom and self.rect.left >= sprite.rect.right:
-                    collisions.append(CollisionEvent(sprite,"tlbr"))
-                #top and bottom middle cases
-                elif (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left):
-                    self.move(self.vx,0)
-                    #below
-                    if self.rect.bottom <= sprite.rect.top:
-                        collisions.append(CollisionEvent(sprite,"bbtt"))
-                    #above
-                    if self.rect.top >= sprite.rect.bottom:
-                        collisions.append(CollisionEvent(sprite,"ttbb"))
-                #left and right middle cases
-                if (self.rect.bottom < sprite.rect.bottom and self.rect.bottom > sprite.rect.top) or (self.rect.top < sprite.rect.bottom and self.rect.top > sprite.rect.top):
-                    #to the right
-                    if self.rect.left >= sprite.rect.right:
-                        collisions.append(CollisionEvent(sprite,"llrr"))
-                    #to the left
-                    if self.rect.right <= sprite.rect.left:
-                        collisions.append(CollisionEvent(sprite,"rrll"))
-                else:
-                    #print("Something broke with collision codes....")
-                    pass
+    def get_collision_code(self, sprite):
+        if self.rect.colliderect(sprite.rect):
+            #corner cases
+            #top left
+            if self.rect.bottom <= sprite.rect.top and self.rect.right <= sprite.rect.left:
+                return CollisionEvent(sprite,"brtl")
+            #top right
+            elif self.rect.bottom <= sprite.rect.top and self.rect.left >= sprite.rect.right:
+                return CollisionEvent(sprite,"bltr")
+            #bottom left
+            elif self.rect.top >= sprite.rect.bottom and self.rect.right <= sprite.rect.left:
+                return CollisionEvent(sprite,"trbl")
+            #bottom right
+            elif self.rect.top >= sprite.rect.bottom and self.rect.left >= sprite.rect.right:
+                return CollisionEvent(sprite,"tlbr")
+            #top and bottom middle cases
+            elif (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left):
+                self.move(self.vx,0)
+                #below
+                if self.rect.bottom <= sprite.rect.top:
+                    return CollisionEvent(sprite,"bbtt")
+                #above
+                if self.rect.top >= sprite.rect.bottom:
+                    return CollisionEvent(sprite,"ttbb")
+            #left and right middle cases
+            if (self.rect.bottom < sprite.rect.bottom and self.rect.bottom > sprite.rect.top) or (self.rect.top < sprite.rect.bottom and self.rect.top > sprite.rect.top):
+                #to the right
+                if self.rect.left >= sprite.rect.right:
+                    return CollisionEvent(sprite,"llrr")
+                #to the left
+                if self.rect.right <= sprite.rect.left:
+                    return CollisionEvent(sprite,"rrll")
+            else:
+                #print("Something broke with collision codes....")
+                pass
+        else:
+            return None
 
-                
-                # sprite.move(sprite.vx,sprite.vy)
-            for collision in collisions:
-                self.on_collision(collision)
-        return collisions
+    def collide(self,sprite):
+        #Move back to before we were colliding
+        self.move(-self.vx,-self.vy)
+        sprite.move(-sprite.vx,-sprite.vy)
+        
 
+        player_old_vx = self.vx
+        player_old_vy = self.vy
+        self.vx //= 10
+        self.vy //= 10
+        sprite_old_vxs = sprite.vx
+        sprite_old_vys = sprite.vy
+        sprite.vx //= 10
+        sprite.vy //= 10
+
+        for i in range(10):
+            self.move()
+            sprite.move()
+            collision = self.get_collision_code(sprite)
+            if collision is not None:
+                return collision
+
+        self.vx = player_old_vx - 10 * self.vx
+        self.vy = player_old_vy - 10 * self.vy
+        sprite.vx = sprite_old_vxs - 10 * sprite.vx
+        sprite.vy = sprite_old_vys - 10 * sprite.vy
+
+        self.move()
+        sprite.move()
+        collision = self.get_collision_code(sprite)
+        if collision is not None:
+            return collision
+
+        self.vx = player_old_vx
+        self.vy = player_old_vy
+        sprite.vx = sprite_old_vxs
+        sprite.vy = sprite_old_vys
+
+        return None
+    
     def on_collision(self,CollisionEvent):
         pass
         
@@ -279,7 +286,8 @@ class Player(Sprite):
             pygame.quit()
 
     def update(self,**kwargs):
-        for event in pygame.event.get(): pass
+        for event in pygame.event.get(): 
+            pass
         key = pygame.key.get_pressed()
         if key[K_0]:
             self.vy = 0
@@ -292,10 +300,9 @@ class Player(Sprite):
             if self.current_num_jumps <= 7:
                 if self.vx > 6 or self.vx < -6:
                     self.vy = self.max_upward + 1
-                    self.current_num_jumps = self.current_num_jumps + 1
                 else:
                     self.vy = self.max_upward
-                    self.current_num_jumps = self.current_num_jumps + 1
+                self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
@@ -417,8 +424,6 @@ class Platform(Sprite):
     def __init__(self,window,x,y,width=80,height=20,color=(0,255,0)):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.height = height
-    def update(self,**kwargs):
-        self.collide([self.window.player_sprite])
 
 class Water(Sprite):
     def __init__(self,window,x,y,width=80,height=20,color=(0,255,0)):

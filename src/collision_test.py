@@ -10,6 +10,6 @@ window.current_level().platforms.append(Platform(window,600,800,600,200))
 window.current_level().platforms.append(Platform(window,100,400,60,300))
 window.current_level().platforms.append(Platform(window,1520,100,window.width,100))
 
-window.player_sprite = Player(window,360,300)
+window.player_sprite = Player(window,360,500)
 
 window.start()
