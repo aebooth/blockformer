@@ -1,7 +1,7 @@
 from blockformer_core import *
 from blockformer_init import *
 
-window = Window(1720,480,720,480,60,"The Test")
+window = Window(1720,1480,720,480,60,"The Test")
 
 window.hbar_sprite = Hbar(window,-10,475,100,height=1,color=(0,200,0))
 window.current_level().platforms.append(Platform(window,-window.width,100,window.width*3,window.height))
