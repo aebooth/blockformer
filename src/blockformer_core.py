@@ -240,7 +240,7 @@ class Player(Sprite):
             self.shield = 100
         if self.shield < 0:
             self.shield = 0
-        # print("HP:",self.health,"Shield:",self.shield,self.shield_timer)
+        print(self.vx,self.vy)
         for event in pygame.event.get(): pass
         key = pygame.key.get_pressed()
         if key[K_q]:
@@ -398,7 +398,7 @@ class HUD(Sprite):
         self.image.fill(self.color)
 
 class Platform(Sprite):
-    def __init__(self,window,x,y,width=80,height=20,color=(50,50,50)):
+    def __init__(self,window,x,y,width,height,color=(50,50,50)):
         Sprite.__init__(self,window,x,y,width,height,color)
         self.height = height
         self.air_timer = 0
@@ -409,7 +409,7 @@ class Platform(Sprite):
                 sprite.on_collision(self)
                 #Move sprite to top
                 if sprite.rect.bottom <= self.rect.bottom or sprite.rect.bottom >= self.rect.bottom:
-                    sprite.move(0,self.rect.bottom - sprite.rect.top)
+                    sprite.y = self.rect.centery - self.height/2
                     sprite.vy = 0
                 #Move sprite to bottom
                 if sprite.rect.top >= self.rect.centery:
@@ -463,7 +463,7 @@ class Water(Sprite):
                 sprite.dive = False
                 # sprite.max_forward = 7
                 sprite.max_upward = 10
-                sprite.max_downward = -12
+                sprite.max_downward = -16
                 sprite.ground_friction = .86
 
     def update(self,**kwargs):

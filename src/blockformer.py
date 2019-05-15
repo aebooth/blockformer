@@ -25,10 +25,10 @@ window.current_level().platforms.append(Platform(window,1300,200,width=40,height
 # window.current_level().platforms.append(Platform(window,1340,180,width=200,height=10))
 window.current_level().platforms.append(Platform(window,1340,20,width=400,height=20))
 window.current_level().platforms.append(Platform(window,3300,200,width=40,height=200))
-window.current_level().platforms.append(Platform(window,3340,20,width=400,height=20))
-window.current_level().platforms.append(Platform(window,4460,20,width=480,height=20))
+window.current_level().platforms.append(Platform(window,3340,20,width=400,height=10))
+window.current_level().platforms.append(Platform(window,4460,20,width=480,height=10))
 window.current_level().platforms.append(Platform(window,4500,200,width=400,height=200))
-window.current_level().platforms.append(Platform(window,5500,100,width=window.width,height=100))
+window.current_level().platforms.append(Platform(window,5500,200,width=window.width,height=100))
 
 motion = MotionSpecification(window,150,500,0,500,2,1)
 window.current_level().platforms.append(MovingPlatform(window,motion,200,100,height=30))
