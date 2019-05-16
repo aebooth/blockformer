@@ -152,13 +152,6 @@ class Sprite:
         self.name = name
 
     def move(self, dx=None, dy=None):
-        if self.name == "Player":
-            print("Position " + str(self.x),str(self.y))
-            if dy == None:
-                print("Moved Self " +str(self.vy), str(self.vy))
-            elif dy != None:
-                print("Got moved " +str(dx), str(dy))
-        # print(self.__class__.__name__ + " moved")
         if dx == None or dy == None:
             self.x = self.x + int(self.vx)
             self.y = self.y + int(self.vy)
@@ -173,7 +166,6 @@ class Sprite:
         self.window.screen.blit(self.image,self.rect)
 
     def get_collision_code(self, sprite):
-        print("Generating Code at " + str(self.x) ,str(self.y))
         #corner cases
         #top left
         if self.rect.bottom <= sprite.rect.top and self.rect.right <= sprite.rect.left:
@@ -188,7 +180,7 @@ class Sprite:
         elif self.rect.top >= sprite.rect.bottom and self.rect.left >= sprite.rect.right:
             return CollisionEvent(sprite,"tlbr")
         #top and bottom middle cases
-        if (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left):
+        if (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left) or (self.rect.left <= sprite.rect.left and self.rect.right >= sprite.rect.right):
             #below
             if self.rect.bottom <= sprite.rect.top + 2:
                 return CollisionEvent(sprite,"bbtt")
@@ -198,17 +190,16 @@ class Sprite:
         #left and right middle cases
         if (self.rect.bottom < sprite.rect.bottom and self.rect.bottom > sprite.rect.top) or (self.rect.top < sprite.rect.bottom and self.rect.top > sprite.rect.top):
             #to the right
-            if self.rect.left >= sprite.rect.right + 2:
+            if self.rect.left >= sprite.rect.right - 2:
                 return CollisionEvent(sprite,"llrr")
             #to the left
-            if self.rect.right <= sprite.rect.left - 2:
+            if self.rect.right <= sprite.rect.left + 2:
                 return CollisionEvent(sprite,"rrll")
         else:
             print("Something broke with collision codes....")
             # pass
 
     def collide(self,sprite):
-        print("Starting Collision")
         #Move back to before we were colliding
 
         #Heres the slight modification that I made for the minimums
@@ -233,12 +224,10 @@ class Sprite:
         sprite.vy //= 10
 
         for i in range(10):
-            print("Checking Collision with " + sprite.name)
             self.move()
             sprite.move()
             collision = self.get_collision_code(sprite)
             if collision is not None:
-                print("Got Code")
                 self.vx = player_old_vx
                 self.vy = player_old_vy
                 return collision
@@ -260,7 +249,6 @@ class Sprite:
         collision = self.get_collision_code(sprite)
         if collision is not None:
             return collision
-        print("Velocities reset")
         self.vx = player_old_vx
         self.vy = player_old_vy
         sprite.vx = sprite_old_vxs
@@ -280,11 +268,11 @@ class Player(Sprite):
         Sprite.__init__(self,window,x,y,width,height,color,name="Player")
         self.current_num_jumps = 0
         self.max_upward = 20
-        self.max_forward = 2
-        self.max_downward = -100
+        self.max_forward = 10
+        self.max_downward = -10
         self.x = x
         self.y = y
-        self.frictionv = .88
+        self.frictionv = .8
         self.health = 200
         self.breath = 0
     def gravity(self):
@@ -320,45 +308,44 @@ class Player(Sprite):
         if key[K_q]:
             print(self.x, self.y)
         if key[K_y]:
-            self.vy = 0
-            self.y += 10
+            self.vy = 1
         if key[K_SPACE] or key[K_w]:
             if self.current_num_jumps <= 7:
                 if self.vx > 6 or self.vx < -6:
-                    self.vy = self.max_upward + 1
+                    self.vy = self.max_upward + 2
                 else:
                     self.vy = self.max_upward
                 self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = self.vx - 2
+                    self.vx = self.vx - 3
                 else:
                     self.vx = self.vx - 1
             elif self.current_num_jumps <= 1:
-                self.vx = self.vx - 1.05
+                self.vx = self.vx - 2
             else:
                 self.vx = self.vx - .5
         if key[K_d]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = self.vx + 2
+                    self.vx = self.vx + 3
                 else:
                     self.vx = self.vx + 1
             elif self.current_num_jumps <= 1:
-                self.vx = self.vx + 1.05
+                self.vx = self.vx + 2
             else:
                 self.vx = self.vx + .5
         if key[K_s]:
             if self.current_num_jumps == 0:
-                self.vx *= .75
+                self.vx *= .6
             else:
-                self.vy = -120
+                self.vy = -12
                 self.current_num_jumps = 8
         if key[K_b]:
             self.max_forward = 10
         elif not key[K_b]:
-            self.max_forward = 6
+            self.max_forward = 5
             pygame.event.clear()
         self.dead()
         self.gravity()
@@ -367,7 +354,6 @@ class Player(Sprite):
 
     def on_collision(self,collision_event):
         if isinstance(collision_event.sprite,Platform):
-            print(collision_event.code)
             #Corners
             # if collision_event.code == "brtl" or collision_event.code == "bltr":
             #     if abs(self.vx) > abs(self.vy):
@@ -389,15 +375,13 @@ class Player(Sprite):
                     self.vy = 0
             #Left Wall and Right Wall
             if collision_event.code == "rrll":
-                if self.vx < 0:
-                    self.x = collision_event.sprite.x + collision_event.sprite.width
-                    self.vx = 0
-                    self.y += self.vy
+                self.x = collision_event.sprite.x - self.width
+                self.vx = 0                
+                self.y += self.vy
             if collision_event.code == "llrr":
-                if self.vx > 0:
-                    self.x = collision_event.sprite.x - self.width
-                    self.vx = 0                
-                    self.y += self.vy
+                self.x = collision_event.sprite.x + collision_event.sprite.width
+                self.vx = 0
+                self.y += self.vy
                 
             return True
 
