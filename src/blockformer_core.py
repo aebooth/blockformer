@@ -270,16 +270,14 @@ class Player(Sprite):
         self.max_upward = 20
         self.max_forward = 10
         self.max_downward = -10
-        self.x = x
-        self.y = y
         self.frictionv = .8
         self.health = 200
         self.breath = 0
     def gravity(self):
         if self.vy > self.max_downward:
             self.vy = self.vy - 1
-        # else:
-        #     self.vy = self.max_downward
+        else:
+            self.vy = self.max_downward
 
     def friction(self):
         if self.current_num_jumps == 0:
@@ -294,6 +292,8 @@ class Player(Sprite):
                 self.vx = -self.max_forward
 
     def dead(self):
+        if self.y < 0:
+            pygame.quit()
         if self.health > 200:
             self.health = 200
         if self.health <= 0:
@@ -303,20 +303,18 @@ class Player(Sprite):
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
-        if key[K_0]:
-            self.vy = 1
         if key[K_q]:
-            print(self.x, self.y)
+            print(self.vx, self.vy)
         if key[K_y]:
-            self.vy = 1
-        if key[K_SPACE] or key[K_w]:
+            self.vy = 10
+        if key[K_SPACE] or key[K_w] or key[K_UP]:
             if self.current_num_jumps <= 7:
                 if self.vx > 6 or self.vx < -6:
                     self.vy = self.max_upward + 2
                 else:
                     self.vy = self.max_upward
                 self.current_num_jumps = self.current_num_jumps + 1
-        if key[K_a]:
+        if key[K_a] or key[K_LEFT]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
                     self.vx = self.vx - 3
@@ -326,7 +324,7 @@ class Player(Sprite):
                 self.vx = self.vx - 2
             else:
                 self.vx = self.vx - .5
-        if key[K_d]:
+        if key[K_d] or key[K_RIGHT]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
                     self.vx = self.vx + 3
@@ -336,7 +334,7 @@ class Player(Sprite):
                 self.vx = self.vx + 2
             else:
                 self.vx = self.vx + .5
-        if key[K_s]:
+        if key[K_s] or key[K_DOWN]:
             if self.current_num_jumps == 0:
                 self.vx *= .6
             else:
@@ -371,6 +369,7 @@ class Player(Sprite):
                     self.current_num_jumps = 0
             if collision_event.code == "ttbb":
                 if self.vy > 0:
+                    self.x += self.vx
                     self.y = collision_event.sprite.y - collision_event.sprite.height
                     self.vy = 0
             #Left Wall and Right Wall
@@ -398,7 +397,7 @@ class Player(Sprite):
             self.max_upward = 5
             self.max_downward = -3
             self.max_forward = 4
-            self.frictionv = .82
+            self.frictionv = .8
             self.current_num_jumps = 0
             if self.breath >= 5400:
                 self.health -= 10
@@ -412,6 +411,7 @@ class Player(Sprite):
             self.max_downward = -10
             self.max_forward = 5
             self.frictionv = .88
+            return False
         return False
 
 class BadGuy(Sprite):
@@ -458,17 +458,8 @@ class Heal(Sprite):
     def __init__(self,window,x,y,width=80,height=30,color=(0,200,0)):
         Sprite.__init__(self,window,x,y,width,height,color)
 
-    def collide(self, sprites):
-        collided = False
-        for sprite in sprites:
-            if sprite.rect.colliderect(self.rect):
-                sprite.on_collision(self)
-                self.on_collision(sprite)
-                collided = True
-        return collided
-
-    def on_collision(self,sprite):
-        if isinstance(sprite,Player):
+    def on_collision(self,collision_event):
+        if isinstance(collision_event.sprite,Player):
             sprite.health += 50
             self.y = -1000
 
