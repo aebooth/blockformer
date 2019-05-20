@@ -267,15 +267,15 @@ class Player(Sprite):
     def __init__(self,window,x,y,width=40,height=80,color=(200,0,255),health=200):
         Sprite.__init__(self,window,x,y,width,height,color,name="Player")
         self.current_num_jumps = 0
-        self.max_upward = 20
-        self.max_forward = 10
-        self.max_downward = -10
+        self.max_upward = 10
+        self.max_forward = 12
+        self.max_downward = -16
         self.frictionv = .8
         self.health = 200
         self.breath = 0
     def gravity(self):
         if self.vy > self.max_downward:
-            self.vy = self.vy - 1
+            self.vy = self.vy - .5
         else:
             self.vy = self.max_downward
 
@@ -285,11 +285,11 @@ class Player(Sprite):
                 self.vx = self.vx * self.frictionv
             else:
                 self.vx = 0
-        if self.current_num_jumps >= 0:
-            if self.vx > self.max_forward:
-                self.vx = self.max_forward
-            if self.vx < -self.max_forward:
-                self.vx = -self.max_forward
+    def terminal_velocity(self):
+        if self.vx > self.max_forward:
+            self.vx = self.max_forward
+        if self.vx < -self.max_forward:
+            self.vx = -self.max_forward
 
     def dead(self):
         if self.y < 0:
@@ -300,38 +300,41 @@ class Player(Sprite):
             pygame.quit()
 
     def update(self,**kwargs):
+        print(self.vx,self.vy)
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
         if key[K_q]:
-            print(self.vx, self.vy)
+            print(self.x, self.y)
         if key[K_y]:
             self.vy = 10
         if key[K_SPACE] or key[K_w] or key[K_UP]:
-            if self.current_num_jumps <= 7:
-                if self.vx > 6 or self.vx < -6:
+            if self.current_num_jumps <= 10:
+                if self.vx > 5 or self.vx < -5:
                     self.vy = self.max_upward + 2
+                elif self.vx > 3 or self.vx < -3:
+                    self.vy = self.max_upward + 1
                 else:
                     self.vy = self.max_upward
                 self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a] or key[K_LEFT]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = self.vx - 3
+                    self.vx = self.vx - 2
                 else:
                     self.vx = self.vx - 1
             elif self.current_num_jumps <= 1:
-                self.vx = self.vx - 2
+                self.vx = self.vx - 1
             else:
                 self.vx = self.vx - .5
         if key[K_d] or key[K_RIGHT]:
             if key[K_b]:
                 if self.current_num_jumps <= 1:
-                    self.vx = self.vx + 3
+                    self.vx = self.vx + 2
                 else:
                     self.vx = self.vx + 1
             elif self.current_num_jumps <= 1:
-                self.vx = self.vx + 2
+                self.vx = self.vx + 1
             else:
                 self.vx = self.vx + .5
         if key[K_s] or key[K_DOWN]:
@@ -339,15 +342,17 @@ class Player(Sprite):
                 self.vx *= .6
             else:
                 self.vy = -12
-                self.current_num_jumps = 8
+                self.current_num_jumps = 11
         if key[K_b]:
-            self.max_forward = 10
+            self.max_forward = 6
         elif not key[K_b]:
-            self.max_forward = 5
+            self.max_forward = 4
             pygame.event.clear()
         self.dead()
         self.gravity()
-        self.friction()
+        self.terminal_velocity()
+        if not key[K_a] and not key[K_d]:
+            self.friction()
         self.move()
 
     def on_collision(self,collision_event):
@@ -374,12 +379,14 @@ class Player(Sprite):
                     self.vy = 0
             #Left Wall and Right Wall
             if collision_event.code == "rrll":
+                if self.current_num_jumps == 0:
+                    self.vx = 0        
                 self.x = collision_event.sprite.x - self.width
-                self.vx = 0                
                 self.y += self.vy
             if collision_event.code == "llrr":
+                if self.current_num_jumps == 0:
+                    self.vx = 0
                 self.x = collision_event.sprite.x + collision_event.sprite.width
-                self.vx = 0
                 self.y += self.vy
                 
             return True
