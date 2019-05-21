@@ -17,8 +17,9 @@ window.current_level().platforms.append(Platform(window,1400,300,80,500))
 window.current_level().platforms.append(Platform(window,1700,200,80,500))
 window.current_level().platforms.append(Platform(window,1780,320,80,40,color=(255,255,255)))
 window.current_level().platforms.append(Platform(window,2000,200,500,500))
-window.current_level().platforms.append(Platform(window,2799,200,60,500))
-window.current_level().platforms.append(Platform(window,2800,700,60,420))
+window.current_level().platforms.append(Platform(window,2800,900,60,420))
+window.current_level().platforms.append(Platform(window,2799,400,260,500))
+window.current_level().platforms.append(Platform(window,3000,580,60,500))
 
 window.player_sprite = Player(window,360,580)
 

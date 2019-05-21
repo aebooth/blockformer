@@ -301,10 +301,15 @@ class Player(Sprite):
             self.gravityv = .5
 
     def update(self,**kwargs):
+        if self.y < 0:
+            pygame.quit()
         print(self.vx,self.vy)
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
+        if key[K_LALT]:
+            self.x = 2900
+            self.y = 480
         if key[K_q]:
             print(self.x, self.y)
         if key[K_y]:
