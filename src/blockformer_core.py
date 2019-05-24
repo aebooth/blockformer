@@ -555,8 +555,8 @@ class AnimatedSprite(Sprite):
 
     def position_sync(self,sprites):
         for sprite in sprites:
-            self.x = sprite.x
-            self.y = sprite.y
+            self.x = sprite.x-29
+            self.y = sprite.y+16
 
     def handle_keypresses(self):
         pressed = pygame.key.get_pressed()
@@ -572,17 +572,17 @@ class AnimatedSprite(Sprite):
             else:
                 self.set_active_animation("move_left")
                 
-        elif pressed[pygame.K_w]:
-            if self.animation is self.animations["move_up"]:
-                self.animate()
-            else:
-                self.set_active_animation("move_up")
+        # elif pressed[pygame.K_w]:
+        #     if self.animation is self.animations["move_up"]:
+        #         self.animate()
+        #     else:
+        #         self.set_active_animation("move_up")
                 
-        elif pressed[pygame.K_s]:
-            if self.animation is self.animations["move_down"]:
-                self.animate()
-            else:
-                self.set_active_animation("move_down")
+        # elif pressed[pygame.K_s]:
+        #     if self.animation is self.animations["move_down"]:
+        #         self.animate()
+        #     else:
+        #         self.set_active_animation("move_down")
 
     # override this
     def update(self):
@@ -612,7 +612,7 @@ class Animation:
         self.frames = frame_sequence
         self.current_frame = 0
         # Number of frames to wait before advancing
-        self.advance_rate = 1
+        self.advance_rate = 2
         self.frame_counter = 0
 
     def get_frame(self):

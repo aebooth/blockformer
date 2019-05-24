@@ -25,17 +25,17 @@ window.player_sprite = Player(window,360,580)
 
 window.player_animations = AnimatedSprite(window, 0,0)
 
-superblock = Spritesheet("./pygame-ezgo/aPiratedSpritesheet.png",64,64,0)
-superblock.add_sequence("move_right",3,9)
-superblock.add_sequence("move_left",1,9)
-superblock.add_sequence("move_up",0,9)
-superblock.add_sequence("move_down",2,9)
+superblock = Spritesheet("./blockformer/src/thump_run_sheet.png",96,96,0)
+superblock.add_sequence("move_right",0,8)
+superblock.add_sequence("move_left",1,8)
+# superblock.add_sequence("move_up",0,9)
+# superblock.add_sequence("move_down",2,9)
 
 window.player_animations.animations["move_right"] = Animation(superblock.sequences["move_right"])
 window.player_animations.animations["move_left"] = Animation(superblock.sequences["move_left"])
-window.player_animations.animations["move_up"] = Animation(superblock.sequences["move_up"])
-window.player_animations.animations["move_down"] = Animation(superblock.sequences["move_down"])
+# window.player_animations.animations["move_up"] = Animation(superblock.sequences["move_up"])
+# window.player_animations.animations["move_down"] = Animation(superblock.sequences["move_down"])
 
-window.player_animations.set_active_animation("move_down")
+window.player_animations.set_active_animation("move_right")
 
 window.start()
