@@ -271,14 +271,15 @@ class Player(Sprite):
         Sprite.__init__(self,window,x,y,width,height,color,name="Player")
         self.current_num_jumps = 0
         self.max_upward = 10
-        self.max_forward = 12
+        self.max_forward = 4
         self.max_downward = -16
         self.frictionv = .8
+        self.gravityv = .5
         self.health = 200
         self.breath = 0
     def gravity(self):
         if self.vy > self.max_downward:
-            self.vy = self.vy - .5
+            self.vy = self.vy - self.gravityv
         else:
             self.vy = self.max_downward
 
@@ -294,19 +295,24 @@ class Player(Sprite):
         if self.vx < -self.max_forward:
             self.vx = -self.max_forward
 
-    def dead(self):
-        if self.y < 0:
-            pygame.quit()
-        if self.health > 200:
-            self.health = 200
-        if self.health <= 0:
-            pygame.quit()
+    def reset_values(self):
+        if self.current_num_jumps == 0:
+            self.max_upward = 10
+            self.max_forward = 4
+            self.max_downward = -16
+            self.frictionv = .8
+            self.gravityv = .5
 
     def update(self,**kwargs):
+        if self.y < 0:
+            pygame.quit()
         print(self.vx,self.vy)
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
+        if key[K_LALT]:
+            self.x = 2900
+            self.y = 480
         if key[K_q]:
             print(self.x, self.y)
         if key[K_y]:
@@ -325,7 +331,7 @@ class Player(Sprite):
                 if self.current_num_jumps <= 1:
                     self.vx = self.vx - 2
                 else:
-                    self.vx = self.vx - 1
+                    self.vx = self.vx - .25
             elif self.current_num_jumps <= 1:
                 self.vx = self.vx - 1
             else:
@@ -335,7 +341,7 @@ class Player(Sprite):
                 if self.current_num_jumps <= 1:
                     self.vx = self.vx + 2
                 else:
-                    self.vx = self.vx + 1
+                    self.vx = self.vx + .25
             elif self.current_num_jumps <= 1:
                 self.vx = self.vx + 1
             else:
@@ -347,16 +353,22 @@ class Player(Sprite):
                 self.vy = -12
                 self.current_num_jumps = 11
         if key[K_b]:
+            # if self.current_num_jumps == 0:
+            #     self.max_forward = 2
+            # if self.current_num_jumps > 0:
+            #     self.max_forward = 8
+            # self.max_upward = 5
+            # self.max_downward = -8
+            # self.gravityv = .25
             self.max_forward = 6
-        elif not key[K_b]:
-            self.max_forward = 4
             pygame.event.clear()
-        self.dead()
-        self.gravity()
+        if not key[K_0]:
+            self.gravity()
         self.terminal_velocity()
         if not key[K_a] and not key[K_d]:
             self.friction()
         self.move()
+        self.reset_values()
 
     def on_collision(self,collision_event):
         if isinstance(collision_event.sprite,Platform):
