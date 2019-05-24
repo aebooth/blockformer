@@ -18,6 +18,7 @@ class Window:
         self.clock = pygame.time.Clock()
         self.frames_per_second = frames_per_second
         self.player_sprite = None
+        self.player_animations = None
         self.hbar_sprite = None
         self.current_level_index = 0
         self.levels = []
@@ -47,10 +48,12 @@ class Window:
 
     def draw(self):
         self.current_level().draw()
+        self.player_animations.draw()
         self.player_sprite.draw()
         self.hbar_sprite.draw()
 
     def update(self, **kwargs):
+        self.player_animations.update(**kwargs)
         self.player_sprite.update(**kwargs)
         self.current_level().update(**kwargs)
         
@@ -510,6 +513,71 @@ class CollisionEvent:
         self.sprite = sprite
         self.code = code
 
+class AnimatedSprite(Sprite):
+    def __init__(self, window, x, y,width=40,height=40,color=(0,0,0), animation=None, image=pygame.Surface((50,50))):
+        Sprite.__init__(self,window,x,y,width,height,color)
+        self.animations = {"default":animation}
+        self.animation = self.animations["default"]
+        self.image = image
+        self.x = x
+        self.y = y
+        #The Sprite's rect represents its position in the viewport, not the window
+        self.rect = pygame.Rect(self.x,self.y,self.image.get_rect().width,self.image.get_rect().height)
+        self.window = window
+
+    # don't override this
+    # WARNING: Fails silently!!
+    def set_active_animation(self, animation_name):
+        if animation_name in self.animations:
+            self.animation = self.animations[animation_name]
+            self.image = self.animation.get_frame()
+
+    # don't override this
+    def animate(self):
+        self.animation.advance()
+        self.image = self.animation.get_frame()
+
+    # override this
+    def update(self):
+        self.x = self.window.player_sprite.x
+        self.y = self.window.player_sprite.y
+
+class Spritesheet:
+    def __init__(self,file_path,sprite_width,sprite_height,sprite_padding=0):
+        self.sheet = pygame.image.load(file_path)
+        self.sheet.convert()
+        self.padding = sprite_padding
+        self.sprite_rect = pygame.Rect(self.padding,self.padding,sprite_width,sprite_height)
+        self.sequences = {}
+
+    def add_sequence(self,name,start_row,num_frames):
+        self.sprite_rect.y = start_row * (self.padding + self.sprite_rect.height)
+        self.sprite_rect.x = self.padding
+        frames = []
+        for i in range(num_frames):
+            frames.append(self.sheet.subsurface(self.sprite_rect))
+            self.sprite_rect.move_ip(self.padding + self.sprite_rect.width , 0)
+        self.sequences[name] = frames
+
+class Animation:
+    def __init__(self,frame_sequence):
+        self.frames = frame_sequence
+        self.current_frame = 0
+        # Number of frames to wait before advancing
+        self.advance_rate = 1
+        self.frame_counter = 0
+
+    def get_frame(self):
+        return self.frames[self.current_frame]
+
+    def advance(self):
+        if self.frame_counter < self.advance_rate:
+            self.frame_counter = self.frame_counter + 1
+        else:
+            self.current_frame = self.current_frame + 1
+            if self.current_frame >= len(self.frames):
+                self.current_frame = 0
+            self.frame_counter = 0
 
 if __name__ == '__main__':
     pass
