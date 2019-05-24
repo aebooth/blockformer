@@ -22,6 +22,7 @@ window.current_level().platforms.append(Platform(window,2799,400,260,500))
 window.current_level().platforms.append(Platform(window,3000,580,60,500))
 
 window.player_sprite = Player(window,360,580)
+
 window.player_animations = AnimatedSprite(window, 0,0)
 
 superblock = Spritesheet("./pygame-ezgo/aPiratedSpritesheet.png",64,64,0)

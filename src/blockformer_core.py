@@ -48,13 +48,13 @@ class Window:
 
     def draw(self):
         self.current_level().draw()
-        self.player_animations.draw()
         self.player_sprite.draw()
+        self.player_animations.draw()
         self.hbar_sprite.draw()
 
     def update(self, **kwargs):
-        self.player_animations.update(**kwargs)
         self.player_sprite.update(**kwargs)
+        self.player_animations.update(**kwargs)
         self.current_level().update(**kwargs)
         
         sprite_list = self.current_level().sprites()
@@ -91,6 +91,11 @@ class Window:
         else:
             self.lower_bound = new_lower
         self.current_level().move_all()
+
+    def handle_keypresses(self):
+        pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_t]:
+            print("pressing 't' for test works")
 
     def start(self,*args):
         while True:
@@ -306,7 +311,6 @@ class Player(Sprite):
     def update(self,**kwargs):
         if self.y < 0:
             pygame.quit()
-        print(self.vx,self.vy)
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
@@ -534,7 +538,7 @@ class AnimatedSprite(Sprite):
         self.x = x
         self.y = y
         #The Sprite's rect represents its position in the viewport, not the window
-        self.rect = pygame.Rect(self.x,self.y,self.image.get_rect().width,self.image.get_rect().height)
+        self.rect = pygame.Rect(window.screen_x(x),window.screen_y(y),self.image.get_rect().width,self.image.get_rect().height)
         self.window = window
 
     # don't override this
@@ -549,10 +553,42 @@ class AnimatedSprite(Sprite):
         self.animation.advance()
         self.image = self.animation.get_frame()
 
+    def position_sync(self,sprites):
+        for sprite in sprites:
+            self.x = sprite.x
+            self.y = sprite.y
+
+    def handle_keypresses(self):
+        pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_d]:
+            if self.animation is self.animations["move_right"]:
+                self.animate()
+            else:
+                self.set_active_animation("move_right")
+                
+        elif pressed[pygame.K_a]:
+            if self.animation is self.animations["move_left"]:
+                self.animate()
+            else:
+                self.set_active_animation("move_left")
+                
+        elif pressed[pygame.K_w]:
+            if self.animation is self.animations["move_up"]:
+                self.animate()
+            else:
+                self.set_active_animation("move_up")
+                
+        elif pressed[pygame.K_s]:
+            if self.animation is self.animations["move_down"]:
+                self.animate()
+            else:
+                self.set_active_animation("move_down")
+
     # override this
     def update(self):
-        self.x = self.window.player_sprite.x
-        self.y = self.window.player_sprite.y
+        self.handle_keypresses()
+        self.position_sync([self.window.player_sprite])
+        self.rect = pygame.Rect(self.window.screen_x(self.x),self.window.screen_y(self.y),self.image.get_rect().width,self.image.get_rect().height)
 
 class Spritesheet:
     def __init__(self,file_path,sprite_width,sprite_height,sprite_padding=0):
