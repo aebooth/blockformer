@@ -313,16 +313,28 @@ class Player(Sprite):
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
-        if self.current_num_jumps == 0:
-            if key[K_a]:
-                self.state = "walk_left"
-            elif key[K_d]:
-                self.state = "walk_right"
-            else:
-                if self.state == "walk_left":
-                    self.state = "stand_left"
-                elif self.state == "walk_right":
-                    self.state = "stand_right"
+        if self.current_num_jumps > 0:
+            if self.state == "walk_left" or self.state == "stand_left" or self.state == "run_left":
+                self.state = "jump_left"
+            elif self.state == "walk_right" or self.state == "stand_right" or self.state == "run_right":
+                self.state = "jump_right"
+        else:
+            if self.current_num_jumps == 0:
+                if key[K_a]:
+                    if key[K_b]:
+                        self.state = "run_left"
+                    else:
+                        self.state = "walk_left"
+                elif key[K_d]:
+                    if key[K_b]:
+                        self.state = "run_right"
+                    else:
+                        self.state = "walk_right"
+                else:
+                    if self.state == "walk_left" or self.state == "jump_left" or self.state == "run_left":
+                        self.state = "stand_left"
+                    elif self.state == "walk_right" or self.state == "jump_right" or self.state == "run_right":
+                        self.state = "stand_right"
 
     def update(self,**kwargs):
         if self.y < 0:
@@ -383,7 +395,6 @@ class Player(Sprite):
             self.max_forward = 6
             pygame.event.clear()
         self.current_state()
-        print(self.state)
         if not key[K_0]:
             self.gravity()
         self.terminal_velocity()
@@ -582,30 +593,6 @@ class AnimatedSprite(Sprite):
                 self.animate()
             else:
                 self.set_active_animation(sprite.state)
-        # pressed = pygame.key.get_pressed()
-        # if pressed[pygame.K_d]:
-        #     if self.animation is self.animations["move_right"]:
-        #         self.animate()
-        #     else:
-        #         self.set_active_animation("move_right")
-                
-        # elif pressed[pygame.K_a]:
-        #     if self.animation is self.animations["move_left"]:
-        #         self.animate()
-        #     else:
-        #         self.set_active_animation("move_left")
-                
-        # elif pressed[pygame.K_w]:
-        #     if self.animation is self.animations["move_up"]:
-        #         self.animate()
-        #     else:
-        #         self.set_active_animation("move_up")
-                
-        # elif pressed[pygame.K_s]:
-        #     if self.animation is self.animations["move_down"]:
-        #         self.animate()
-        #     else:
-        #         self.set_active_animation("move_down")
 
     # override this
     def update(self):
@@ -631,11 +618,11 @@ class Spritesheet:
         self.sequences[name] = frames
 
 class Animation:
-    def __init__(self,frame_sequence):
+    def __init__(self,frame_sequence,advance_rate):
         self.frames = frame_sequence
         self.current_frame = 0
         # Number of frames to wait before advancing
-        self.advance_rate = 2
+        self.advance_rate = advance_rate
         self.frame_counter = 0
 
     def get_frame(self):
