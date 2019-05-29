@@ -190,10 +190,10 @@ class Sprite:
         #top and bottom middle cases
         if (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left) or (self.rect.left <= sprite.rect.left and self.rect.right >= sprite.rect.right):
             #below
-            if self.rect.bottom <= sprite.rect.top + 2:
+            if self.rect.bottom -2 <= sprite.rect.top + 2:
                 return CollisionEvent(sprite,"bbtt")
             #above
-            if self.rect.top >= sprite.rect.bottom - 2:
+            if self.rect.top +2 >= sprite.rect.bottom - 2:
                 return CollisionEvent(sprite,"ttbb")
         #left and right middle cases
         if (self.rect.bottom < sprite.rect.bottom and self.rect.bottom > sprite.rect.top) or (self.rect.top < sprite.rect.bottom and self.rect.top > sprite.rect.top):
@@ -337,6 +337,7 @@ class Player(Sprite):
                         self.state = "stand_right"
 
     def update(self,**kwargs):
+        print(self.vx,self.vy)
         if self.y < 0:
             pygame.quit()
         for event in pygame.event.get(): 
@@ -359,22 +360,12 @@ class Player(Sprite):
                     self.vy = self.max_upward
                 self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a] or key[K_LEFT]:
-            if key[K_b]:
-                if self.current_num_jumps <= 1:
-                    self.vx = self.vx - 2
-                else:
-                    self.vx = self.vx - .25
-            elif self.current_num_jumps <= 1:
+            if self.current_num_jumps <= 1:
                 self.vx = self.vx - 1
             else:
                 self.vx = self.vx - .5
         if key[K_d] or key[K_RIGHT]:
-            if key[K_b]:
-                if self.current_num_jumps <= 1:
-                    self.vx = self.vx + 2
-                else:
-                    self.vx = self.vx + .25
-            elif self.current_num_jumps <= 1:
+            if self.current_num_jumps <= 1:
                 self.vx = self.vx + 1
             else:
                 self.vx = self.vx + .5
@@ -385,14 +376,7 @@ class Player(Sprite):
                 self.vy = -12
                 self.current_num_jumps = 11
         if key[K_b]:
-            # if self.current_num_jumps == 0:
-            #     self.max_forward = 2
-            # if self.current_num_jumps > 0:
-            #     self.max_forward = 8
-            # self.max_upward = 5
-            # self.max_downward = -8
-            # self.gravityv = .25
-            self.max_forward = 6
+            self.max_forward = 8
             pygame.event.clear()
         self.current_state()
         if not key[K_0]:
@@ -404,6 +388,9 @@ class Player(Sprite):
         self.reset_values()
 
     def on_collision(self,collision_event):
+        for event in pygame.event.get(): 
+            pass
+        key = pygame.key.get_pressed()
         if isinstance(collision_event.sprite,Platform):
             #Corners
             # if collision_event.code == "brtl" or collision_event.code == "bltr":
@@ -427,15 +414,21 @@ class Player(Sprite):
                     self.vy = 0
             #Left Wall and Right Wall
             if collision_event.code == "rrll":
-                if self.current_num_jumps == 0:
-                    self.vx = 0        
                 self.x = collision_event.sprite.x - self.width
                 self.y += self.vy
+                if self.current_num_jumps == 0 or not key[K_d]:
+                    self.vx = 0        
+                else:
+                    self.vx -= .5
+                    self.x += -self.vx/2
             if collision_event.code == "llrr":
-                if self.current_num_jumps == 0:
-                    self.vx = 0
                 self.x = collision_event.sprite.x + collision_event.sprite.width
                 self.y += self.vy
+                if self.current_num_jumps == 0 or not key[K_a]:
+                    self.vx = 0
+                else:
+                    self.vx += .5
+                    self.x += -self.vx/2
                 
             return True
 
@@ -566,9 +559,9 @@ class AnimatedSprite(Sprite):
         self.image = image
         self.x = x
         self.y = y
-        #The Sprite's rect represents its position in the viewport, not the window
         self.rect = pygame.Rect(window.screen_x(x),window.screen_y(y),self.image.get_rect().width,self.image.get_rect().height)
         self.window = window
+        self.reset_timer = 2
 
     # don't override this
     # WARNING: Fails silently!!
@@ -579,7 +572,7 @@ class AnimatedSprite(Sprite):
 
     # don't override this
     def animate(self):
-        self.animation.advance()
+        self.animation.advance(None)
         self.image = self.animation.get_frame()
 
     def position_sync(self,sprites):
@@ -593,9 +586,18 @@ class AnimatedSprite(Sprite):
                 self.animate()
             else:
                 self.set_active_animation(sprite.state)
+                self.reset_timer = 2
+
+    def reset_animation(self):
+        if self.reset_timer > 0:
+            self.reset_timer -= 1
+        elif self.reset_timer == 0:
+            self.animation.advance(starting_frame=0)
+            
 
     # override this
     def update(self):
+        self.reset_animation()
         self.handle_input([self.window.player_sprite])
         self.position_sync([self.window.player_sprite])
         self.rect = pygame.Rect(self.window.screen_x(self.x),self.window.screen_y(self.y),self.image.get_rect().width,self.image.get_rect().height)
@@ -628,7 +630,9 @@ class Animation:
     def get_frame(self):
         return self.frames[self.current_frame]
 
-    def advance(self):
+    def advance(self,starting_frame):
+        if starting_frame != None:
+            self.current_frame = starting_frame
         if self.frame_counter < self.advance_rate:
             self.frame_counter = self.frame_counter + 1
         else:

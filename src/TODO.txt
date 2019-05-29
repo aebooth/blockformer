@@ -1,1 +1,1 @@
-Currently creating a base level.
+Make animations reset so that stops work properly
