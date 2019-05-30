@@ -338,16 +338,16 @@ class Player(Sprite):
 
     def update(self,**kwargs):
         print(self.vx,self.vy)
-        if self.y < 0:
-            pygame.quit()
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
+        if key[K_F1] and key[K_RSHIFT] or self.y < 0:
+            pygame.quit()
         if key[K_LALT]:
             self.x = 2900
             self.y = 480
         if key[K_q]:
-            print(self.x, self.y)
+            print(self.x+20, self.y-80)
         if key[K_y]:
             self.vy = 10
         if key[K_SPACE] or key[K_w] or key[K_UP]:
@@ -583,10 +583,10 @@ class AnimatedSprite(Sprite):
     def handle_input(self,sprites):
         for sprite in sprites:
             if self.animation is self.animations[sprite.state]:
+                self.reset_timer = 2
                 self.animate()
             else:
                 self.set_active_animation(sprite.state)
-                self.reset_timer = 2
 
     def reset_animation(self):
         if self.reset_timer > 0:
@@ -620,12 +620,12 @@ class Spritesheet:
         self.sequences[name] = frames
 
 class Animation:
-    def __init__(self,frame_sequence,advance_rate):
+    def __init__(self,frame_sequence,advance_rate,advance_type):
         self.frames = frame_sequence
         self.current_frame = 0
-        # Number of frames to wait before advancing
         self.advance_rate = advance_rate
         self.frame_counter = 0
+        self.advance_type = advance_type
 
     def get_frame(self):
         return self.frames[self.current_frame]
@@ -638,7 +638,10 @@ class Animation:
         else:
             self.current_frame = self.current_frame + 1
             if self.current_frame >= len(self.frames):
-                self.current_frame = 0
+                if self.advance_type == "loop":
+                    self.current_frame = 0
+                if self.advance_type == "stop":
+                    self.current_frame = len(self.frames) - 1
             self.frame_counter = 0
 
 if __name__ == '__main__':
