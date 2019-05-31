@@ -32,4 +32,27 @@ bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
 bad_motion = MotionSpecification(window,100,500,50,100,2,2)
 window.current_level().enemies.append(BadGuy(window,100,200,motion=bad_motion2))
 
+window.player_animations = AnimatedSprite(window, 0,0)
+
+superblock = Spritesheet("./blockformer/src/thump_sheetv5.png",96,96,0)
+superblock.add_sequence("jump_left",0,1)
+superblock.add_sequence("jump_right",1,1)
+superblock.add_sequence("walk_right",2,8)
+superblock.add_sequence("walk_left",3,8)
+superblock.add_sequence("run_right",2,8)
+superblock.add_sequence("run_left",3,8)
+superblock.add_sequence("stand_left",4,1)
+superblock.add_sequence("stand_right",5,1)
+
+window.player_animations.animations["jump_right"] = Animation(superblock.sequences["jump_right"],2,"stop")
+window.player_animations.animations["jump_left"] = Animation(superblock.sequences["jump_left"],2,"stop")
+window.player_animations.animations["walk_right"] = Animation(superblock.sequences["walk_right"],3,"loop")
+window.player_animations.animations["walk_left"] = Animation(superblock.sequences["walk_left"],3,"loop")
+window.player_animations.animations["run_right"] = Animation(superblock.sequences["run_right"],2,"loop")
+window.player_animations.animations["run_left"] = Animation(superblock.sequences["run_left"],2,"loop")
+window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],2,"loop")
+window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],2,"loop")
+
+window.player_animations.set_active_animation("stand_right")
+
 window.start()

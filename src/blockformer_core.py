@@ -337,7 +337,7 @@ class Player(Sprite):
                         self.state = "stand_right"
 
     def update(self,**kwargs):
-        print(self.vx,self.vy)
+        # print(self.vx,self.vy)
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
@@ -385,13 +385,13 @@ class Player(Sprite):
         if not key[K_a] and not key[K_d]:
             self.friction()
         self.move()
-        self.reset_values()
 
     def on_collision(self,collision_event):
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
         if isinstance(collision_event.sprite,Platform):
+            self.reset_values()
             #Corners
             # if collision_event.code == "brtl" or collision_event.code == "bltr":
             #     if abs(self.vx) > abs(self.vy):
@@ -438,9 +438,9 @@ class Player(Sprite):
             self.move()
             return True
         if isinstance(collision_event.sprite,Water):
+            print(collision_event.code,self.x,self.y)
             self.x += self.vx
             self.y += self.vy
-            self.vy = 0
             self.breath += 1
             self.max_upward = 5
             self.max_downward = -3
@@ -455,10 +455,7 @@ class Player(Sprite):
             self.breath -= 2
             if self.breath < 0:
                 self.breath = 0
-            self.max_upward = 10
-            self.max_downward = -10
-            self.max_forward = 5
-            self.frictionv = .88
+            self.reset_values()
             return False
         return False
 
@@ -561,7 +558,6 @@ class AnimatedSprite(Sprite):
         self.y = y
         self.rect = pygame.Rect(window.screen_x(x),window.screen_y(y),self.image.get_rect().width,self.image.get_rect().height)
         self.window = window
-        self.reset_timer = 2
 
     # don't override this
     # WARNING: Fails silently!!
@@ -583,21 +579,19 @@ class AnimatedSprite(Sprite):
     def handle_input(self,sprites):
         for sprite in sprites:
             if self.animation is self.animations[sprite.state]:
-                self.reset_timer = 2
                 self.animate()
             else:
                 self.set_active_animation(sprite.state)
 
-    def reset_animation(self):
-        if self.reset_timer > 0:
-            self.reset_timer -= 1
-        elif self.reset_timer == 0:
-            self.animation.advance(starting_frame=0)
+    def reset_animation(self,sprites):
+        for sprite in sprites:
+            if self.animations[sprite.state] != self.animation:
+                self.animation.advance(starting_frame=0)
             
 
     # override this
     def update(self):
-        self.reset_animation()
+        self.reset_animation([self.window.player_sprite])
         self.handle_input([self.window.player_sprite])
         self.position_sync([self.window.player_sprite])
         self.rect = pygame.Rect(self.window.screen_x(self.x),self.window.screen_y(self.y),self.image.get_rect().width,self.image.get_rect().height)
