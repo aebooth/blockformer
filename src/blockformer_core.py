@@ -451,13 +451,13 @@ class Player(Sprite):
                 self.health -= 10
                 self.breath = 0
             return True
-        else:
-            self.breath -= 2
-            if self.breath < 0:
-                self.breath = 0
-            self.reset_values()
-            return False
-        return False
+        # else:
+        #     self.breath -= 2
+        #     if self.breath < 0:
+        #         self.breath = 0
+        #     self.reset_values()
+        #     return False
+        # return False
 
 class BadGuy(Sprite):
     def __init__(self,window,x,y,width=20,height=40,color=(255,0,0),motion=None):
