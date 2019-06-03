@@ -210,7 +210,6 @@ class Sprite:
     def collide(self,sprite):
         #Move back to before we were colliding
 
-        #Heres the slight modification that I made for the minimums
         if abs(self.vy) <= 1 and abs(self.vx) <= 1:
             self.move(-self.vx*2,-self.vy*2)
         elif abs(self.vx) <= 1:
@@ -479,8 +478,8 @@ class Platform(Sprite):
         self.height = height
 
 class Water(Sprite):
-    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0)):
-        Sprite.__init__(self,window,x,y,width,height,color)
+    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0),name="Water"):
+        Sprite.__init__(self,window,x,y,width,height,color,name="Water")
 
     def on_collision(self, sprite):
         collided = False
