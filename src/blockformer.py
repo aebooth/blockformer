@@ -30,14 +30,14 @@ window.current_level().platforms.append(Platform(window,4460,20,width=480,height
 window.current_level().platforms.append(Platform(window,4500,200,width=400,height=200))
 window.current_level().platforms.append(Platform(window,5500,200,width=window.width,height=100))
 
-motion = MotionSpecification(window,150,500,0,500,2,1)
-window.current_level().platforms.append(MovingPlatform(window,motion,200,100,height=30))
+# motion = MotionSpecification(window,150,500,0,500,2,1)
+# window.current_level().platforms.append(MovingPlatform(window,motion,200,100,height=30))
 
 window.player_sprite = Player(window,0,200,color=(255,0,255),health=200,shield=100)
 # window.my_sprite = TestSprite(window,window.player_sprite.x,window.player_sprite.y)
-bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
-bad_motion = MotionSpecification(window,260,260,50,100,0,2)
-window.current_level().enemies.append(BadGuy(window,100,400,motion=bad_motion))
+# bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
+# bad_motion = MotionSpecification(window,260,260,50,100,0,2)
+# window.current_level().enemies.append(BadGuy(window,100,400,motion=bad_motion))
 
 window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
 window.sbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))

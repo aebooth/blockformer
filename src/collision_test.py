@@ -3,7 +3,6 @@ from blockformer_init import *
 
 window = Window(10080,1720,1080,720,60,"The Test")
 
-window.hbar_sprite = Hbar(window,-10,475,100,height=1,color=(0,200,0))
 window.current_level().platforms.append(Platform(window,0,window.height*2,60,window.height*2))
 window.current_level().platforms.append(Platform(window,0,500,560,window.height,name="MainFloor"))
 window.current_level().platforms.append(Water(window,560,400,240,window.height,color=(0,0,255)))
@@ -22,6 +21,10 @@ window.current_level().platforms.append(Platform(window,2000,200,500,500))
 # window.current_level().platforms.append(Platform(window,2800,900,60,420))
 window.current_level().platforms.append(Platform(window,2800,400,260,500))
 window.current_level().platforms.append(Platform(window,3000,580,6000,500))
+
+window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
+window.sbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))
+window.bbar_sprite = HUD(window,5,25,height=10,direction="horzr",maxwidth=300,input="breath",color=(0,0,255))
 
 window.player_sprite = Player(window,360,580,color=(255,255,255))
 
