@@ -1,13 +1,7 @@
 import pygame
 import random
 import time
-import sys
 from pygame.locals import *
-
-#Animate1
-def load_image(name):
-    image = pygame.image.load(name)
-    return image
 
 class Window:
     def __init__(self,width=700,height=500,screen_width=700,screen_height=500,frames_per_second=60,title="my game"):
@@ -18,17 +12,16 @@ class Window:
         self.width = width
         self.height = height
         self.screen_width = screen_width
-        self.screen_height= screen_height
+        self.screen_height = screen_height
         self.left_bound = 0
         self.lower_bound = 0
         self.clock = pygame.time.Clock()
         self.frames_per_second = frames_per_second
         self.player_sprite = None
+        self.player_animations = None
         self.hbar_sprite = None
         self.sbar_sprite = None
         self.bbar_sprite = None
-        self.my_sprite = TestSprite()
-        self.my_group = pygame.sprite.Group(self.my_sprite)
         self.current_level_index = 0
         self.levels = []
         self.levels.append(Level(self))
@@ -58,19 +51,27 @@ class Window:
     def draw(self):
         self.current_level().draw()
         self.player_sprite.draw()
+        self.player_animations.draw()
         self.hbar_sprite.draw()
         self.sbar_sprite.draw()
         self.bbar_sprite.draw()
         self.my_group.draw(self.screen)
 
     def update(self, **kwargs):
-        self.my_sprite.update(**kwargs)
-        self.my_group.update(**kwargs)
         self.player_sprite.update(**kwargs)
+        self.player_animations.update(**kwargs)
         self.current_level().update(**kwargs)
         self.hbar_sprite.update(**kwargs)
         self.sbar_sprite.update(**kwargs)
         self.bbar_sprite.update(**kwargs)
+        
+        sprite_list = self.current_level().sprites()
+        collision_indices = self.player_sprite.rect.collidelistall(sprite_list)
+        for index in collision_indices:
+            collision = self.player_sprite.collide(sprite_list[index])
+            if collision is not None:
+                self.player_sprite.on_collision(collision)
+                sprite_list[index].on_collision(collision)
         self.follow_player()
 
     def change_level(self, level_delta = 1):
@@ -97,6 +98,11 @@ class Window:
             self.lower_bound = new_lower
         self.current_level().move_all()
 
+    def handle_keypresses(self):
+        pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_t]:
+            print("pressing 't' for test works")
+
     def start(self,*args):
         while True:
             if len(pygame.event.get(pygame.QUIT)) > 0:
@@ -121,10 +127,12 @@ class Level:
         self.platforms = []
         self.enemies = []
 
+    def sprites(self):
+        return self.background + self.platforms + self.enemies
+
     def move_all(self):
-        for sprite in (self.background+self.platforms+self.enemies):
-            sprite.rect.x = self.window.screen_x(sprite.x)
-            sprite.rect.y = self.window.screen_y(sprite.y)
+        for sprite in self.sprites():
+            sprite.move()
 
     def draw(self):
         for sprite in self.background:
@@ -143,7 +151,7 @@ class Level:
             sprite.update(**kwargs)
 
 class Sprite:
-    def __init__(self,window,x,y,width,height,color):
+    def __init__(self,window,x,y,width,height,color,name="Sprite"):
         self.window = window
         self.x = x
         self.y = y
@@ -155,35 +163,128 @@ class Sprite:
         self.rect = pygame.Rect(window.screen_x(x), window.screen_y(y), width, height)
         self.image = pygame.Surface((width,height))
         self.image.fill(color)
+        self.name = name
 
-    def move(self,dx,dy):
-        self.x = self.x + dx
-        self.y = self.y + dy
+    def move(self, dx=None, dy=None):
+        if dx == None or dy == None:
+            self.x = self.x + int(self.vx)
+            self.y = self.y + int(self.vy)
+        else:
+            self.x = self.x + dx
+            self.y = self.y + dy
         self.rect.x = self.window.screen_x(self.x)
         self.rect.y = self.window.screen_y(self.y)
+    
 
     def draw(self):
         self.window.screen.blit(self.image,self.rect)
 
-    def collide(self, sprites):
-        pass
+    def get_collision_code(self, sprite):
+        #corner cases
+        #top left
+        if self.rect.bottom <= sprite.rect.top and self.rect.right <= sprite.rect.left:
+            return CollisionEvent(sprite,"brtl")
+        #top right
+        elif self.rect.bottom <= sprite.rect.top and self.rect.left >= sprite.rect.right:
+            return CollisionEvent(sprite,"bltr")
+        #bottom left
+        elif self.rect.top >= sprite.rect.bottom and self.rect.right <= sprite.rect.left:
+            return CollisionEvent(sprite,"trbl")
+        #bottom right
+        elif self.rect.top >= sprite.rect.bottom and self.rect.left >= sprite.rect.right:
+            return CollisionEvent(sprite,"tlbr")
+        #top and bottom middle cases
+        if (self.rect.right < sprite.rect.right and self.rect.right > sprite.rect.left) or (self.rect.left < sprite.rect.right and self.rect.left > sprite.rect.left) or (self.rect.left <= sprite.rect.left and self.rect.right >= sprite.rect.right):
+            #below
+            if self.rect.bottom -2 <= sprite.rect.top + 2:
+                return CollisionEvent(sprite,"bbtt")
+            #above
+            if self.rect.top +2 >= sprite.rect.bottom - 2:
+                return CollisionEvent(sprite,"ttbb")
+        #left and right middle cases
+        if (self.rect.bottom < sprite.rect.bottom and self.rect.bottom > sprite.rect.top) or (self.rect.top < sprite.rect.bottom and self.rect.top > sprite.rect.top):
+            #to the right
+            if self.rect.left >= sprite.rect.right - 2:
+                return CollisionEvent(sprite,"llrr")
+            #to the left
+            if self.rect.right <= sprite.rect.left + 2:
+                return CollisionEvent(sprite,"rrll")
+        else:
+            print("Something broke with collision codes....")
+            # pass
 
-    def on_collision(self,sprite):
+    def collide(self,sprite):
+        #Move back to before we were colliding
+
+        if abs(self.vy) <= 1 and abs(self.vx) <= 1:
+            self.move(-self.vx*2,-self.vy*2)
+        elif abs(self.vx) <= 1:
+            self.move(-self.vx*2,-self.vy)
+        elif abs(self.vy) <= 1:
+            self.move(-self.vx,-self.vy*2)
+        else:
+            self.move(-self.vx,-self.vy)
+        sprite.move(-sprite.vx,-sprite.vy)
+        
+
+        player_old_vx = self.vx
+        player_old_vy = self.vy
+        self.vx //= 10
+        self.vy //= 10
+        sprite_old_vxs = sprite.vx
+        sprite_old_vys = sprite.vy
+        sprite.vx //= 10
+        sprite.vy //= 10
+
+        for i in range(10):
+            self.move()
+            sprite.move()
+            collision = self.get_collision_code(sprite)
+            if collision is not None:
+                self.vx = player_old_vx
+                self.vy = player_old_vy
+                return collision
+
+        self.vx = player_old_vx - 10 * self.vx
+        self.vy = player_old_vy - 10 * self.vy
+        sprite.vx = sprite_old_vxs - 10 * sprite.vx
+        sprite.vy = sprite_old_vys - 10 * sprite.vy
+
+        if abs(self.vy) <= 1 and abs(self.vx) <= 1:
+            self.move(self.vx*2,self.vy*2)
+        elif abs(self.vx) <= 1:
+            self.move(self.vx*2,self.vy)
+        elif abs(self.vy) <= 1:
+            self.move(self.vx,self.vy*2)
+        else:
+            self.move(self.vx,self.vy)
+        sprite.move()
+        collision = self.get_collision_code(sprite)
+        if collision is not None:
+            return collision
+        self.vx = player_old_vx
+        self.vy = player_old_vy
+        sprite.vx = sprite_old_vxs
+        sprite.vy = sprite_old_vys
+
+        return None
+    
+    def on_collision(self,CollisionEvent):
         pass
+        
 
     def update(self,**kwargs):
         pass
 
 class Player(Sprite):
     def __init__(self,window,x,y,width=40,height=80,color=(200,0,255),health=200,shield=100):
-        Sprite.__init__(self,window,x,y,width,height,color)
+        Sprite.__init__(self,window,x,y,width,height,color,name="Player")
         self.current_num_jumps = 0
         self.max_upward = 10
-        self.max_forward = 7
+        self.max_forward = 4
         self.max_downward = -16
-        self.ground_friction = .86
-        self.x = x
-        self.y = y
+        self.frictionv = .8
+        self.gravityv = .5
         self.health = health
         self.shield = shield
         self.breath_timer = 600
@@ -191,9 +292,11 @@ class Player(Sprite):
         self.shield_timer = 0
         self.underwater = False
         self.dive = False
+
+        self.state = "stand_right"
     def gravity(self):
         if self.vy > self.max_downward:
-            self.vy = self.vy - .5
+            self.vy = self.vy - self.gravityv
         else:
             self.vy = self.max_downward
 
@@ -203,11 +306,6 @@ class Player(Sprite):
                 self.vx = self.vx * self.ground_friction
             else:
                 self.vx = 0
-        if self.current_num_jumps >= 0:
-            if self.vx > self.max_forward:
-                self.vx = self.max_forward
-            if self.vx < -self.max_forward:
-                self.vx = -self.max_forward
 
     def breathhold(self):
         if self.underwater == True:
@@ -231,6 +329,47 @@ class Player(Sprite):
         elif self.shield_timer == 0:
             self.shield += 1
 
+    def terminal_velocity(self):
+        if self.vx > self.max_forward:
+            self.vx = self.max_forward
+        if self.vx < -self.max_forward:
+            self.vx = -self.max_forward
+
+    def reset_values(self):
+        if self.current_num_jumps == 0:
+            self.max_upward = 10
+            self.max_forward = 4
+            self.max_downward = -16
+            self.frictionv = .8
+            self.gravityv = .5
+
+    def current_state(self):
+        for event in pygame.event.get(): 
+            pass
+        key = pygame.key.get_pressed()
+        if self.current_num_jumps > 0:
+            if self.state == "walk_left" or self.state == "stand_left" or self.state == "run_left":
+                self.state = "jump_left"
+            elif self.state == "walk_right" or self.state == "stand_right" or self.state == "run_right":
+                self.state = "jump_right"
+        else:
+            if self.current_num_jumps == 0:
+                if key[K_a]:
+                    if key[K_b]:
+                        self.state = "run_left"
+                    else:
+                        self.state = "walk_left"
+                elif key[K_d]:
+                    if key[K_b]:
+                        self.state = "run_right"
+                    else:
+                        self.state = "walk_right"
+                else:
+                    if self.state == "walk_left" or self.state == "jump_left" or self.state == "run_left":
+                        self.state = "stand_left"
+                    elif self.state == "walk_right" or self.state == "jump_right" or self.state == "run_right":
+                        self.state = "stand_right"
+
     def update(self,**kwargs):
         if self.health > 200:
             self.health = 200
@@ -240,48 +379,42 @@ class Player(Sprite):
             self.shield = 100
         if self.shield < 0:
             self.shield = 0
-        print(self.vx,self.vy)
-        for event in pygame.event.get(): pass
+        # print(self.vx,self.vy)
+        for event in pygame.event.get(): 
+            pass
         key = pygame.key.get_pressed()
+        if key[K_F1] and key[K_RSHIFT] or self.y < 0:
+            pygame.quit()
+        if key[K_LALT]:
+            self.x = 2900
+            self.y = 480
         if key[K_q]:
-            print(self.x,self.y)
+            print(self.x+20, self.y-80)
         if key[K_y]:
             self.vy = 10
-        if key[K_RALT]:
-            self.y = 100
-            self.x = 1400
         if key[K_SPACE] or key[K_w] or key[K_UP]:
-            if self.current_num_jumps <= 7:
-                if self.vx > 6 or self.vx < -6:
+            if self.current_num_jumps <= 10:
+                if self.vx > 5 or self.vx < -5:
                     self.vy = self.max_upward + 2
-                    self.current_num_jumps = self.current_num_jumps + 1
+                elif self.vx > 3 or self.vx < -3:
+                    self.vy = self.max_upward + 1
                 else:
                     self.vy = self.max_upward
-                    self.current_num_jumps = self.current_num_jumps + 1
+                self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a] or key[K_LEFT]:
-            if key[K_b]:
-                if self.current_num_jumps <= 1:
-                    self.vx = self.vx - 1.2
-                else:
-                    self.vx = self.vx - .3
-            elif self.current_num_jumps <= 1:
-                self.vx = self.vx - 1.05
+            if self.current_num_jumps <= 1:
+                self.vx = self.vx - 1
             else:
-                self.vx = self.vx - .4
+                self.vx = self.vx - .5
         if key[K_d] or key[K_RIGHT]:
-            if key[K_b]:
-                if self.current_num_jumps <= 1:
-                    self.vx = self.vx + 1.2
-                else:
-                    self.vx = self.vx + .3
-            elif self.current_num_jumps <= 1:
-                self.vx = self.vx + 1.05
+            if self.current_num_jumps <= 1:
+                self.vx = self.vx + 1
             else:
-                self.vx = self.vx + .4
+                self.vx = self.vx + .5
         if key[K_s] or key[K_DOWN]:
             self.dive = True
             if self.current_num_jumps == 0:
-                self.vx *= .75
+                self.vx *= .6
             else:
                 self.vy += self.max_downward
                 self.current_num_jumps = 8
@@ -297,35 +430,98 @@ class Player(Sprite):
         self.friction()
         self.move(self.vx,self.vy)
 
-    def on_collision(self,sprite):
-        if isinstance(sprite,Platform):
+    # def on_collision(self,sprite):
+    #     if isinstance(sprite,Platform):
+    #         self.current_num_jumps = 0
+    #         self.max_forward = 7
+
+    #     if isinstance(sprite,MovingPlatform):
+    #         self.move(sprite.motion.vx,sprite.motion.vy)
+    #             self.vy = -12
+    #             self.current_num_jumps = 11
+    #     if key[K_b]:
+    #         self.max_forward = 8
+    #         pygame.event.clear()
+    #     self.current_state()
+    #     if not key[K_0]:
+    #         self.gravity()
+    #     self.terminal_velocity()
+    #     if not key[K_a] and not key[K_d]:
+    #         self.friction()
+    #     self.move()
+
+    def on_collision(self,collision_event):
+        for event in pygame.event.get(): 
+            pass
+        key = pygame.key.get_pressed()
+        if isinstance(collision_event.sprite,Platform):
+            self.reset_values()
+            #Corners
+            # if collision_event.code == "brtl" or collision_event.code == "bltr":
+            #     if abs(self.vx) > abs(self.vy):
+            #         self.x += self.vx
+            #         self.vy = 0
+            #     else:
+            #         self.y += self.vy
+            #         self.vx = 0
+            #Floor and Ceiling
+            if collision_event.code == "bbtt":
+                if self.vy < 0:
+                    self.x += self.vx
+                    self.y = collision_event.sprite.y + self.height
+                    self.vy = 0
+                    self.current_num_jumps = 0
+            if collision_event.code == "ttbb":
+                if self.vy > 0:
+                    self.x += self.vx
+                    self.y = collision_event.sprite.y - collision_event.sprite.height
+                    self.vy = 0
+            #Left Wall and Right Wall
+            if collision_event.code == "rrll":
+                self.x = collision_event.sprite.x - self.width
+                self.y += self.vy
+                if self.current_num_jumps == 0 or not key[K_d]:
+                    self.vx = 0        
+                else:
+                    self.vx -= .5
+                    self.x += -self.vx/2
+            if collision_event.code == "llrr":
+                self.x = collision_event.sprite.x + collision_event.sprite.width
+                self.y += self.vy
+                if self.current_num_jumps == 0 or not key[K_a]:
+                    self.vx = 0
+                else:
+                    self.vx += .5
+                    self.x += -self.vx/2
+                
+            return True
+
+        if isinstance(collision_event.sprite,MovingPlatform):
+            self.vx = collision_event.sprite.motion.vx
+            self.vy = collision_event.sprite.motion.vy
+            self.move()
+            return True
+        if isinstance(collision_event.sprite,Water):
+            print(collision_event.code,self.x,self.y)
+            self.x += self.vx
+            self.y += self.vy
+            self.breath += 1
+            self.max_upward = 5
+            self.max_downward = -3
+            self.max_forward = 4
+            self.frictionv = .8
             self.current_num_jumps = 0
-            self.max_forward = 7
-
-        if isinstance(sprite,MovingPlatform):
-            self.move(sprite.motion.vx,sprite.motion.vy)
-
-class TestSprite(pygame.sprite.Sprite):
-    def __init__(self):
-        super(TestSprite, self).__init__()
-        self.images = []
-        self.images.append(load_image('stryf_modstand_rhr.png'))
-        # self.images.append(load_image('thump_stand_r96.png'))
-        # self.images.append(load_image('thump_stand_l96.png'))
-
-        self.index = 0
-        self.image = self.images[self.index]
-        self.rect = pygame.Rect(0, 480, 96, 96)
-    # def position(self,sprites):
-    #     for sprite in sprites:
-    #         self.rect = pygame.Rect(sprite.x, sprite.y, 48, 48)
-
-    def update(self, **kwargs):
-        self.index += 1
-        if self.index >= len(self.images):
-            self.index = 0
-        self.image = self.images[self.index]
-        # self.position([self.window.player_sprite])
+            if self.breath >= 5400:
+                self.health -= 10
+                self.breath = 0
+            return True
+        # else:
+        #     self.breath -= 2
+        #     if self.breath < 0:
+        #         self.breath = 0
+        #     self.reset_values()
+        #     return False
+        # return False
 
 class BadGuy(Sprite):
     def __init__(self,window,x,y,width=40,height=80,color=(255,0,0),motion=None):
@@ -391,11 +587,6 @@ class HUD(Sprite):
                 if sprite.breath_timer <= 0:
                     self.color = (200,0,0)
                     self.width = sprite.drown_timer/2
-    def update(self, **kwargs):
-        self.stat_display([self.window.player_sprite])
-        self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
-        self.image = pygame.Surface((self.width,self.height))
-        self.image.fill(self.color)
 
 class Platform(Sprite):
     def __init__(self,window,x,y,width,height,color=(50,50,50)):
@@ -487,16 +678,23 @@ class Bubbles(Sprite):
 
     def update(self,**kwargs):
         self.collide([self.window.player_sprite])
+    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0),name="Platform"):
+        Sprite.__init__(self,window,x,y,width,height,color,name="Platform")
+        self.height = height
+
+class Water(Sprite):
+    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0),name="Water"):
+        Sprite.__init__(self,window,x,y,width,height,color,name="Water")
+
+    def on_collision(self, sprite):
+        collided = False
+        if isinstance(sprite,Player):
+            collided = True
+        return collided
 
 class DeathBarrier(Sprite):
     def __init__(self,window,x,y,width=80,height=30,color=(0,200,0)):
         Sprite.__init__(self,window,x,y,width,height,color)
-
-    def collide(self, sprites):
-        for sprite in sprites:
-            if sprite.rect.colliderect(self.rect):
-                sprite.on_collision(self)
-                self.on_collision(sprite)
 
     def on_collision(self,sprite):
         if isinstance(sprite,Player):
@@ -508,6 +706,10 @@ class DeathBarrier(Sprite):
 
     def update(self,**kwargs):
         self.collide([self.window.player_sprite])
+            sprite.health -= 10
+            sprite.vy = 20
+            return True
+        return False    
 
 class Heal(Sprite):
     def __init__(self,window,x,y,width=80,height=30,color=(0,200,0)):
@@ -519,13 +721,11 @@ class Heal(Sprite):
                 sprite.on_collision(self)
                 self.on_collision(sprite)
 
-    def on_collision(self,sprite):
-        if isinstance(sprite,Player):
-            sprite.health += 100
+    def on_collision(self,collision_event):
+        if isinstance(collision_event.sprite,Player):
+            sprite.health += 50
             self.y = -1000
 
-    def update(self,**kwargs):
-        self.collide([self.window.player_sprite])
 
 class MotionSpecification:
     def __init__(self,window,left,right,bottom,top,vxi,vyi):
@@ -536,7 +736,7 @@ class MotionSpecification:
         self.vx = vxi
         self.vy = vyi
     
-    def move(self,sprite):
+    def move_sprite(self,sprite):
         sprite.move(self.vx,self.vy)
 
         if sprite.x > self.right - sprite.width:
@@ -558,11 +758,103 @@ class MovingPlatform(Platform):
         Platform.__init__(self,window,x,y,width,height,color)
         self.motion = motion
 
-    def update(self,**kwargs):
-        self.motion.move(self)
-        super().collide([self.window.player_sprite])
+    # def update(self,**kwargs):
+    #     self.move_sprite
 
+class CollisionEvent:
+    def __init__(self, sprite, code):
+        self.sprite = sprite
+        self.code = code
 
+class AnimatedSprite(Sprite):
+    def __init__(self, window, x, y,width=40,height=40,color=(0,0,0), animation=None, image=pygame.Surface((50,50))):
+        Sprite.__init__(self,window,x,y,width,height,color)
+        self.animations = {"default":animation}
+        self.animation = self.animations["default"]
+        self.image = image
+        self.x = x
+        self.y = y
+        self.rect = pygame.Rect(window.screen_x(x),window.screen_y(y),self.image.get_rect().width,self.image.get_rect().height)
+        self.window = window
+
+    # don't override this
+    # WARNING: Fails silently!!
+    def set_active_animation(self, animation_name):
+        if animation_name in self.animations:
+            self.animation = self.animations[animation_name]
+            self.image = self.animation.get_frame()
+
+    # don't override this
+    def animate(self):
+        self.animation.advance(None)
+        self.image = self.animation.get_frame()
+
+    def position_sync(self,sprites):
+        for sprite in sprites:
+            self.x = sprite.x-28
+            self.y = sprite.y+8
+
+    def handle_input(self,sprites):
+        for sprite in sprites:
+            if self.animation is self.animations[sprite.state]:
+                self.animate()
+            else:
+                self.set_active_animation(sprite.state)
+
+    def reset_animation(self,sprites):
+        for sprite in sprites:
+            if self.animations[sprite.state] != self.animation:
+                self.animation.advance(starting_frame=0)
+            
+
+    # override this
+    def update(self):
+        self.reset_animation([self.window.player_sprite])
+        self.handle_input([self.window.player_sprite])
+        self.position_sync([self.window.player_sprite])
+        self.rect = pygame.Rect(self.window.screen_x(self.x),self.window.screen_y(self.y),self.image.get_rect().width,self.image.get_rect().height)
+
+class Spritesheet:
+    def __init__(self,file_path,sprite_width,sprite_height,sprite_padding=0):
+        self.sheet = pygame.image.load(file_path)
+        self.sheet.convert()
+        self.padding = sprite_padding
+        self.sprite_rect = pygame.Rect(self.padding,self.padding,sprite_width,sprite_height)
+        self.sequences = {}
+
+    def add_sequence(self,name,start_row,num_frames):
+        self.sprite_rect.y = start_row * (self.padding + self.sprite_rect.height)
+        self.sprite_rect.x = self.padding
+        frames = []
+        for i in range(num_frames):
+            frames.append(self.sheet.subsurface(self.sprite_rect))
+            self.sprite_rect.move_ip(self.padding + self.sprite_rect.width , 0)
+        self.sequences[name] = frames
+
+class Animation:
+    def __init__(self,frame_sequence,advance_rate,advance_type):
+        self.frames = frame_sequence
+        self.current_frame = 0
+        self.advance_rate = advance_rate
+        self.frame_counter = 0
+        self.advance_type = advance_type
+
+    def get_frame(self):
+        return self.frames[self.current_frame]
+
+    def advance(self,starting_frame):
+        if starting_frame != None:
+            self.current_frame = starting_frame
+        if self.frame_counter < self.advance_rate:
+            self.frame_counter = self.frame_counter + 1
+        else:
+            self.current_frame = self.current_frame + 1
+            if self.current_frame >= len(self.frames):
+                if self.advance_type == "loop":
+                    self.current_frame = 0
+                if self.advance_type == "stop":
+                    self.current_frame = len(self.frames) - 1
+            self.frame_counter = 0
 
 if __name__ == '__main__':
     pass

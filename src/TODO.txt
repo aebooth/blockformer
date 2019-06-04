@@ -1,0 +1,1 @@
+Make animations reset so that stops work properly - Done
