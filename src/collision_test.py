@@ -1,11 +1,11 @@
 from blockformer_core import *
 from blockformer_init import *
 
-window = Window(10080,1720,1080,720,60,"The Test")
+window = Window(10080,1720,720,480,60,"The Test")
 
 window.current_level().platforms.append(Platform(window,0,window.height*2,60,window.height*2))
-window.current_level().platforms.append(Platform(window,0,500,560,window.height,name="MainFloor"))
-window.current_level().platforms.append(Water(window,560,400,240,window.height,color=(0,0,255)))
+window.current_level().platforms.append(Platform(window,0,500,560,window.height,name="MainFlaoor"))
+window.current_level().platforms.append(Water(window,560,460,240,window.height,color=(0,0,255)))
 window.current_level().platforms.append(Platform(window,560,100,240,window.height))
 window.current_level().platforms.append(Platform(window,0,window.height,560,600))
 window.current_level().platforms.append(Platform(window,0,600,60,500))
@@ -22,11 +22,11 @@ window.current_level().platforms.append(Platform(window,2000,200,500,500))
 window.current_level().platforms.append(Platform(window,2800,400,260,500))
 window.current_level().platforms.append(Platform(window,3000,580,6000,500))
 
-window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
-window.sbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))
-window.bbar_sprite = HUD(window,5,25,height=10,direction="horzr",maxwidth=300,input="breath",color=(0,0,255))
+window.player_sprite = Player(window,360,580,color=(100,100,100),health=200)
 
-window.player_sprite = Player(window,360,580,color=(255,255,255))
+window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
+window.sbar_sprite = HUD(window,5,window.height-5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))
+window.bbar_sprite = HUD(window,5,window.height-25,height=10,direction="horzr",maxwidth=300,input="breath",color=(0,0,255))
 
 window.player_animations = AnimatedSprite(window, 0,0)
 

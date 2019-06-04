@@ -5,7 +5,7 @@ window = Window(6000,6000,720,480,60,"The Platforms")
 
 #initialize variables
 
-window.current_level().platforms.append(Water(window,1300,1200,2000,window.height,color=(0,0,75)))
+window.current_level().platforms.append(Water(window,1300,200,2000,window.height,color=(0,0,75)))
 window.current_level().platforms.append(DeathBarrier(window,-window.width/2,-200,window.width*2,height=window.height,color=(255,0,0)))
 window.current_level().platforms.append(Bubbles(window,1540,1000,vx=0,vy=1,width=40,height=1000,color=(0,50,200)))
 window.current_level().platforms.append(Heal(window,1040,100,20,20,color=(150,200,0)))
@@ -33,7 +33,7 @@ window.current_level().platforms.append(Platform(window,5500,200,width=window.wi
 # motion = MotionSpecification(window,150,500,0,500,2,1)
 # window.current_level().platforms.append(MovingPlatform(window,motion,200,100,height=30))
 
-window.player_sprite = Player(window,0,200,color=(255,0,255),health=200,shield=100)
+window.player_sprite = Player(window,0,200,color=(100,100,100),health=200,shield=100)
 # window.my_sprite = TestSprite(window,window.player_sprite.x,window.player_sprite.y)
 # bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
 # bad_motion = MotionSpecification(window,260,260,50,100,0,2)

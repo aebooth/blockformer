@@ -49,8 +49,8 @@ class Window:
         # self.screen.fill((255,255,255))
         self.screen.fill((100,100,100))
     def draw(self):
-        self.current_level().draw()
         self.player_sprite.draw()
+        self.current_level().draw()
         self.player_animations.draw()
         self.hbar_sprite.draw()
         self.sbar_sprite.draw()
@@ -68,7 +68,7 @@ class Window:
         collision_indices = self.player_sprite.rect.collidelistall(sprite_list)
         for index in collision_indices:
             collision = self.player_sprite.collide(sprite_list[index])
-            if collision is not None:
+            if collision is not None and sprite_list[index] != Water:
                 self.player_sprite.on_collision(collision)
                 sprite_list[index].on_collision(collision)
         self.follow_player()
@@ -282,13 +282,14 @@ class Player(Sprite):
         self.max_upward = 10
         self.max_forward = 4
         self.max_downward = -16
-        self.ground_friction = .8
+        self.ground_friction = .88
         self.gravityv = .5
         self.health = health
         self.shield = shield
         self.breath_timer = 600
         self.drown_timer = 300
         self.shield_timer = 0
+        self.in_water = False
         self.underwater = False
         self.dive = False
         self.state = "stand_right"
@@ -338,8 +339,13 @@ class Player(Sprite):
             self.max_upward = 10
             self.max_forward = 4
             self.max_downward = -16
-            self.frictionv = .8
+            self.ground_friction = .8
             self.gravityv = .5
+        if self.in_water == True:
+            self.max_upward = 5
+            self.max_forward = 4
+            self.max_downward = -2
+            self.ground_friction = .88
 
     def current_state(self):
         for event in pygame.event.get(): 
@@ -417,39 +423,23 @@ class Player(Sprite):
                 self.vy += self.max_downward
                 self.current_num_jumps = 8
         if key[K_b]:
-            self.max_forward = 8
+            if self.in_water == True:
+                self.max_forward = 6
+            else:
+                self.max_forward = 8
+        if not key[K_a] and not key[K_d]:
+            self.friction()
             pygame.event.clear()
         self.current_state()
-        self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
-        self.image = pygame.Surface((self.width,self.height))
-        self.image.fill(self.color)
+        # self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
+        # self.image = pygame.Surface((self.width,self.height))
+        # self.image.fill(self.color)
         self.shieldregen()
         self.breathhold()
         self.terminal_velocity()
         self.gravity()
-        if not key[K_a] or not key[K_d]:
-            self.friction()
         self.move()
-
-    # def on_collision(self,sprite):
-    #     if isinstance(sprite,Platform):
-    #         self.current_num_jumps = 0
-    #         self.max_forward = 7
-
-    #     if isinstance(sprite,MovingPlatform):
-    #         self.move(sprite.motion.vx,sprite.motion.vy)
-    #             self.vy = -12
-    #             self.current_num_jumps = 11
-    #     if key[K_b]:
-    #         self.max_forward = 8
-    #         pygame.event.clear()
-    #     self.current_state()
-    #     if not key[K_0]:
-    #         self.gravity()
-    #     self.terminal_velocity()
-    #     if not key[K_a] and not key[K_d]:
-    #         self.friction()
-    #     self.move()
+        self.reset_values()
 
     def on_collision(self,collision_event):
         for event in pygame.event.get(): 
@@ -502,27 +492,6 @@ class Player(Sprite):
             self.vy = collision_event.sprite.motion.vy
             self.move()
             return True
-        if isinstance(collision_event.sprite,Water):
-            print(collision_event.code,self.x,self.y)
-            self.x += self.vx
-            self.y += self.vy
-            self.breath_timer += 1
-            self.max_upward = 5
-            self.max_downward = -3
-            self.max_forward = 4
-            self.frictionv = .8
-            self.current_num_jumps = 0
-            if self.breath_timer >= 5400:
-                self.health -= 10
-                self.breath_timer = 0
-            return True
-        # else:
-        #     self.breath -= 2
-        #     if self.breath < 0:
-        #         self.breath = 0
-        #     self.reset_values()
-        #     return False
-        # return False
 
 class BadGuy(Sprite):
     def __init__(self,window,x,y,width=40,height=80,color=(255,0,0),motion=None):
@@ -563,8 +532,8 @@ class HUD(Sprite):
                 self.width = sprite.health
                 if self.width > 200:
                     self.width = 200
-                if self.direction == "horzl":
-                    self.x -= self.x + self.maxwidth - self.width
+                # if self.direction == "horzl":
+                #     self.x -= self.x + self.maxwidth - self.width
             if self.input == "shield":
                 self.width = sprite.shield
                 if sprite.shield <= 9:
@@ -588,41 +557,16 @@ class HUD(Sprite):
                 if sprite.breath_timer <= 0:
                     self.color = (200,0,0)
                     self.width = sprite.drown_timer/2
+    def update(self, **kwargs):
+        self.stat_display([self.window.player_sprite])
+        self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
+        self.image = pygame.Surface((self.width,self.height))
+        self.image.fill(self.color)
 
 class Platform(Sprite):
     def __init__(self,window,x,y,width=80,height=20,color=(0,255,0),name="Platform"):
         Sprite.__init__(self,window,x,y,width,height,color,name="Platform")
         self.height = height
-        self.air_timer = 0
-    # def collide(self, sprites):
-    #     for sprite in sprites:
-    #         if sprite.rect.colliderect(self.rect):
-    #             self.air_timer = 0
-    #             sprite.on_collision(self)
-    #             #Move sprite to top
-    #             if sprite.rect.bottom <= self.rect.bottom or sprite.rect.bottom >= self.rect.bottom:
-    #                 sprite.y = self.rect.centery - self.height/2
-    #                 sprite.vy = 0
-    #             #Move sprite to bottom
-    #             if sprite.rect.top >= self.rect.centery:
-    #                 sprite.move(0, -self.rect.bottom + sprite.rect.top)
-    #                 sprite.vy = 0
-    #             if sprite.rect.centery >= self.rect.top or sprite.rect.centery <= self.rect.bottom:
-    #                 #Move sprite to left
-    #                 if sprite.rect.centerx <= self.rect.left:
-    #                     sprite.move(self.rect.left - sprite.rect.right,0)
-    #                     sprite.vx = 0
-    #                 #Move sprite to right
-    #                 elif sprite.rect.centerx >= self.rect.right:
-    #                     sprite.move(self.rect.right - sprite.rect.left,0)
-    #                     sprite.vx = 0
-    #         else:
-    #             self.air_timer += 1
-    #             if self.air_timer == 6:
-    #                 sprite.current_num_jumps = 8
-
-    # def update(self,**kwargs):
-    #     self.collide([self.window.player_sprite])
 
 class Water(Sprite):
     def __init__(self,window,x,y,width=80,height=20,color=(0,0,255)):
@@ -631,11 +575,7 @@ class Water(Sprite):
     def collide(self, sprites):
         for sprite in sprites:
             if sprite.rect.colliderect(self.rect):
-                sprite.on_collision(self)
-                sprite.max_upward = 5
-                sprite.max_downward = -2
-                sprite.max_forward = 4
-                sprite.ground_friction = .82
+                sprite.in_water = True
                 if sprite.dive == False and sprite.rect.top >= self.rect.top:
                     sprite.dive = True
                 if sprite.dive == False and sprite.rect.centery-8 >= self.rect.top:
@@ -651,12 +591,10 @@ class Water(Sprite):
                     sprite.underwater = False
                     sprite.dive = False
             else:
+                sprite.in_water = False
                 sprite.underwater = False
                 sprite.dive = False
-                # sprite.max_forward = 7
-                sprite.max_upward = 10
-                sprite.max_downward = -16
-                sprite.ground_friction = .86
+                sprite.reset_values()
 
     def update(self,**kwargs):
         self.collide([self.window.player_sprite])
@@ -670,7 +608,6 @@ class Bubbles(Sprite):
     def collide(self, sprites):
         for sprite in sprites:
             if sprite.rect.colliderect(self.rect):
-                sprite.on_collision(self)
                 sprite.breath_timer = 600
                 # if self.vx != 0:
                 sprite.vx += self.vx
@@ -679,16 +616,6 @@ class Bubbles(Sprite):
 
     def update(self,**kwargs):
         self.collide([self.window.player_sprite])
-
-class Water(Sprite):
-    def __init__(self,window,x,y,width=80,height=20,color=(0,255,0),name="Water"):
-        Sprite.__init__(self,window,x,y,width,height,color,name="Water")
-
-    def on_collision(self, sprite):
-        collided = False
-        if isinstance(sprite,Player):
-            collided = True
-        return collided
 
 class DeathBarrier(Sprite):
     def __init__(self,window,x,y,width=80,height=30,color=(0,200,0)):
