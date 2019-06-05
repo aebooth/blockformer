@@ -33,10 +33,10 @@ window.current_level().platforms.append(Platform(window,5500,200,width=window.wi
 # motion = MotionSpecification(window,150,500,0,500,2,1)
 # window.current_level().platforms.append(MovingPlatform(window,motion,200,100,height=30))
 
-window.player_sprite = Player(window,0,200,color=(100,100,100),health=200,shield=100)
+window.player_sprite = Player(window,0,280,color=(100,100,100),health=200,shield=100)
 # window.my_sprite = TestSprite(window,window.player_sprite.x,window.player_sprite.y)
 # bad_motion2 = MotionSpecification(window,100,101,500,100,0,2)
-# bad_motion = MotionSpecification(window,260,260,50,100,0,2)
+# bad_motion = MotionSpecification(window,260,260,50,100,0,2)yyyyyyyyyyyyyy
 # window.current_level().enemies.append(BadGuy(window,100,400,motion=bad_motion))
 
 window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")

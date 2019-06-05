@@ -49,8 +49,8 @@ class Window:
         # self.screen.fill((255,255,255))
         self.screen.fill((100,100,100))
     def draw(self):
-        self.player_sprite.draw()
         self.current_level().draw()
+        # self.player_sprite.draw()
         self.player_animations.draw()
         self.hbar_sprite.draw()
         self.sbar_sprite.draw()
@@ -338,7 +338,7 @@ class Player(Sprite):
         if self.current_num_jumps == 0:
             self.max_upward = 10
             self.max_forward = 4
-            self.max_downward = -16
+            self.max_downward = -10
             self.ground_friction = .8
             self.gravityv = .5
         if self.in_water == True:
@@ -387,7 +387,7 @@ class Player(Sprite):
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
-        if key[K_F1] and key[K_RSHIFT] or self.y < 0:
+        if key[K_F1] and key[K_RSHIFT] or self.y < -40:
             pygame.quit()
         if key[K_LALT]:
             self.x = 2900
@@ -470,7 +470,8 @@ class Player(Sprite):
             #Left Wall and Right Wall
             if collision_event.code == "rrll":
                 self.x = collision_event.sprite.x - self.width
-                self.y += self.vy
+                if self.vy != -.5:
+                    self.y += self.vy
                 if self.current_num_jumps == 0 or not key[K_d]:
                     self.vx = 0        
                 else:
@@ -478,7 +479,8 @@ class Player(Sprite):
                     self.x += -self.vx/2
             if collision_event.code == "llrr":
                 self.x = collision_event.sprite.x + collision_event.sprite.width
-                self.y += self.vy
+                if self.vy != -.5:
+                    self.y += self.vy
                 if self.current_num_jumps == 0 or not key[K_a]:
                     self.vx = 0
                 else:
@@ -546,7 +548,7 @@ class HUD(Sprite):
                 if self.width%10 > 0:
                     self.width -= 1
             if self.input == "breath":
-                self.color = (0,0,255)
+                self.color = (0,100,255)
                 self.width = sprite.breath_timer/2
                 if sprite.breath_timer >= 590:
                     self.y = -100
