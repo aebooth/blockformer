@@ -3,6 +3,7 @@ from blockformer_init import *
 
 window = Window(10080,680,720,480,60,"The Test")
 
+window.current_level().platforms.append(Water(window,0,240,window.width,200))
 window.current_level().platforms.append(Platform(window,0,680,40,680))
 window.current_level().platforms.append(Platform(window,0,680,window.width,40))
 window.current_level().platforms.append(Platform(window,0,40,window.width,40))
@@ -18,7 +19,7 @@ window.player_sprite = Player(window,40,600,color=(100,100,100),health=200)
 
 window.hbar_sprite = HUD(window,5,5,direction="horzr",maxwidth=200,input="health")
 window.sbar_sprite = HUD(window,5,window.height-5,direction="horzr",maxwidth=100,height=10,input="shield",color=(0,0,100))
-window.bbar_sprite = HUD(window,5,window.height-25,height=10,direction="horzr",maxwidth=300,input="breath",color=(0,0,255))
+window.bbar_sprite = HUD(window,5,window.height-25,height=10,direction="horzr",maxwidth=600,input="breath",color=(0,0,255))
 
 window.player_animations = AnimatedSprite(window, 0,0)
 

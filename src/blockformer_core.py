@@ -390,8 +390,8 @@ class Player(Sprite):
         if key[K_F1] and key[K_RSHIFT] or self.y < -40:
             pygame.quit()
         if key[K_LALT]:
-            self.x = 2900
-            self.y = 480
+            self.x = 40
+            self.y = 600
         if key[K_q]:
             print(self.x+20, self.y-80)
         if key[K_y]:
@@ -407,21 +407,21 @@ class Player(Sprite):
                 self.current_num_jumps = self.current_num_jumps + 1
         if key[K_a] or key[K_LEFT]:
             if self.current_num_jumps <= 1:
-                self.vx = self.vx - 1
-            else:
                 self.vx = self.vx - .5
+            else:
+                self.vx = self.vx - .25
         if key[K_d] or key[K_RIGHT]:
             if self.current_num_jumps <= 1:
-                self.vx = self.vx + 1
-            else:
                 self.vx = self.vx + .5
+            else:
+                self.vx = self.vx + .25
         if key[K_s] or key[K_DOWN]:
             self.dive = True
             if self.current_num_jumps == 0:
                 self.vx *= .6
             else:
                 self.vy += self.max_downward
-                self.current_num_jumps = 8
+                self.current_num_jumps = 11
         if key[K_b]:
             if self.in_water == True:
                 self.max_forward = 6
@@ -549,7 +549,7 @@ class HUD(Sprite):
                     self.width -= 1
             if self.input == "breath":
                 self.color = (0,100,255)
-                self.width = sprite.breath_timer/2
+                self.width = sprite.breath_timer
                 if sprite.breath_timer >= 590:
                     self.y = -100
                 else:
@@ -558,7 +558,7 @@ class HUD(Sprite):
                     self.width = 300
                 if sprite.breath_timer <= 0:
                     self.color = (200,0,0)
-                    self.width = sprite.drown_timer/2
+                    self.width = sprite.drown_timer
     def update(self, **kwargs):
         self.stat_display([self.window.player_sprite])
         self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
