@@ -3,10 +3,10 @@ from blockformer_init import *
 
 window = Window(10080,680,720,480,60,"The Test")
 
-window.current_level().platforms.append(Water(window,0,240,window.width,200))
+# window.current_level().platforms.append(Water(window,0,240,window.width,200))
 window.current_level().platforms.append(Platform(window,0,680,40,680))
 window.current_level().platforms.append(Platform(window,0,680,window.width,40))
-window.current_level().platforms.append(Platform(window,0,40,window.width,40))
+window.current_level().platforms.append(Platform(window,0,40,window.width,40,name="Bottom Floor"))
 window.current_level().platforms.append(Platform(window,0,520,160,680))
 window.current_level().platforms.append(Platform(window,0,480,200,680))
 window.current_level().platforms.append(Platform(window,0,440,240,680))
@@ -32,6 +32,10 @@ superblock.add_sequence("run_right",2,8)
 superblock.add_sequence("run_left",3,8)
 superblock.add_sequence("stand_left",4,1)
 superblock.add_sequence("stand_right",5,1)
+# superblock.add_sequence("swim_left")
+# superblock.add_sequence("swim_right")
+# superblock.add_sequence("tread_left")
+# superblock.add_sequence("tread_right")
 
 window.player_animations.animations["jump_right"] = Animation(superblock.sequences["jump_right"],2,"stop")
 window.player_animations.animations["jump_left"] = Animation(superblock.sequences["jump_left"],2,"stop")
@@ -39,8 +43,9 @@ window.player_animations.animations["walk_right"] = Animation(superblock.sequenc
 window.player_animations.animations["walk_left"] = Animation(superblock.sequences["walk_left"],3,"loop")
 window.player_animations.animations["run_right"] = Animation(superblock.sequences["run_right"],2,"loop")
 window.player_animations.animations["run_left"] = Animation(superblock.sequences["run_left"],2,"loop")
-window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],2,"loop")
-window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],2,"loop")
+window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],4,"loop")
+window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],4,"loop")
+
 
 window.player_animations.set_active_animation("stand_right")
 

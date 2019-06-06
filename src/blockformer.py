@@ -1,7 +1,7 @@
 from blockformer_core import *
 from blockformer_init import *
 
-window = Window(6000,6000,720,480,60,"The Platforms")
+window = Window(6000,6000,1080,720,60,"The Platforms")
 
 #initialize variables
 
@@ -61,8 +61,8 @@ window.player_animations.animations["walk_right"] = Animation(superblock.sequenc
 window.player_animations.animations["walk_left"] = Animation(superblock.sequences["walk_left"],3,"loop")
 window.player_animations.animations["run_right"] = Animation(superblock.sequences["run_right"],2,"loop")
 window.player_animations.animations["run_left"] = Animation(superblock.sequences["run_left"],2,"loop")
-window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],2,"loop")
-window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],2,"loop")
+window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],4,"loop")
+window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],4,"loop")
 
 window.player_animations.set_active_animation("stand_right")
 

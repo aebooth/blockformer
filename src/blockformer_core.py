@@ -359,20 +359,32 @@ class Player(Sprite):
         else:
             if self.current_num_jumps == 0:
                 if key[K_a]:
-                    if key[K_b]:
-                        self.state = "run_left"
+                    if self.in_water == True:
+                        self.state = "swim_left"
                     else:
-                        self.state = "walk_left"
+                        if key[K_b]:
+                            self.state = "run_left"
+                        else:
+                            self.state = "walk_left"
                 elif key[K_d]:
-                    if key[K_b]:
-                        self.state = "run_right"
+                    if self.in_water == True:
+                        self.state = "swim_right"
                     else:
-                        self.state = "walk_right"
+                        if key[K_b]:
+                            self.state = "run_right"
+                        else:
+                            self.state = "walk_right"
                 else:
-                    if self.state == "walk_left" or self.state == "jump_left" or self.state == "run_left":
-                        self.state = "stand_left"
-                    elif self.state == "walk_right" or self.state == "jump_right" or self.state == "run_right":
-                        self.state = "stand_right"
+                    if self.in_water == True:
+                        if self.state == "swim_left" or self.state == "walk_left" or self.state == "jump_left" or self.state == "run_left":
+                            self.state = "tread_left"
+                        elif self.state == "swim_right" or self.state == "walk_right" or self.state == "jump_right" or self.state == "run_right":
+                            self.state = "tread_right"
+                    else:
+                        if self.state == "walk_left" or self.state == "jump_left" or self.state == "run_left":
+                            self.state = "stand_left"
+                        elif self.state == "walk_right" or self.state == "jump_right" or self.state == "run_right":
+                            self.state = "stand_right"
 
     def update(self,**kwargs):
         if self.health > 200:
@@ -387,16 +399,18 @@ class Player(Sprite):
         for event in pygame.event.get(): 
             pass
         key = pygame.key.get_pressed()
-        if key[K_F1] and key[K_RSHIFT] or self.y < -40:
+        if key[K_F1] and key[K_RSHIFT]:
             pygame.quit()
-        if key[K_LALT]:
+        if key[K_LALT] or self.y < -40:
             self.x = 40
             self.y = 600
         if key[K_q]:
             print(self.x+20, self.y-80)
+        if key[K_e]:
+            print(self.vx,self.vy)
         if key[K_y]:
             self.vy = 10
-        if key[K_SPACE] or key[K_w] or key[K_UP]:
+        if key[K_SPACE] or key[K_w]:
             if self.current_num_jumps <= 10:
                 if self.vx > 5 or self.vx < -5:
                     self.vy = self.max_upward + 2
@@ -405,17 +419,17 @@ class Player(Sprite):
                 else:
                     self.vy = self.max_upward
                 self.current_num_jumps = self.current_num_jumps + 1
-        if key[K_a] or key[K_LEFT]:
+        if key[K_a]:
             if self.current_num_jumps <= 1:
                 self.vx = self.vx - .5
             else:
                 self.vx = self.vx - .25
-        if key[K_d] or key[K_RIGHT]:
+        if key[K_d]:
             if self.current_num_jumps <= 1:
                 self.vx = self.vx + .5
             else:
                 self.vx = self.vx + .25
-        if key[K_s] or key[K_DOWN]:
+        if key[K_s]:
             self.dive = True
             if self.current_num_jumps == 0:
                 self.vx *= .6
@@ -429,6 +443,14 @@ class Player(Sprite):
                 self.max_forward = 8
         if not key[K_a] and not key[K_d]:
             self.friction()
+        if key[K_UP]:
+            self.y +=10
+        if key[K_DOWN]:
+            self.y -=10
+        if key[K_LEFT]:
+            self.x -=10
+        if key[K_RIGHT]:
+            self.x +=10
             pygame.event.clear()
         self.current_state()
         # self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
@@ -549,7 +571,7 @@ class HUD(Sprite):
                     self.width -= 1
             if self.input == "breath":
                 self.color = (0,100,255)
-                self.width = sprite.breath_timer
+                self.width = sprite.breath_timer/2
                 if sprite.breath_timer >= 590:
                     self.y = -100
                 else:
@@ -558,7 +580,7 @@ class HUD(Sprite):
                     self.width = 300
                 if sprite.breath_timer <= 0:
                     self.color = (200,0,0)
-                    self.width = sprite.drown_timer
+                    self.width = sprite.drown_timer/2
     def update(self, **kwargs):
         self.stat_display([self.window.player_sprite])
         self.rect = pygame.Rect(self.x,self.y,self.width,self.height)
