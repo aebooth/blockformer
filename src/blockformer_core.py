@@ -330,9 +330,9 @@ class Player(Sprite):
 
     def terminal_velocity(self):
         if self.vx > self.max_forward:
-            self.vx = self.max_forward
+            self.vx -= .5
         if self.vx < -self.max_forward:
-            self.vx = -self.max_forward
+            self.vx += .5
 
     def reset_values(self):
         if self.current_num_jumps == 0:
@@ -345,7 +345,7 @@ class Player(Sprite):
             self.max_upward = 5
             self.max_forward = 4
             self.max_downward = -2
-            self.ground_friction = .88
+            self.ground_friction = .9
 
     def current_state(self):
         for event in pygame.event.get(): 
@@ -362,7 +362,7 @@ class Player(Sprite):
                     if self.in_water == True:
                         self.state = "swim_left"
                     else:
-                        if key[K_b]:
+                        if key[K_b] or self.vx < -5:
                             self.state = "run_left"
                         else:
                             self.state = "walk_left"
@@ -370,7 +370,7 @@ class Player(Sprite):
                     if self.in_water == True:
                         self.state = "swim_right"
                     else:
-                        if key[K_b]:
+                        if key[K_b] or self.vx > 5:
                             self.state = "run_right"
                         else:
                             self.state = "walk_right"
@@ -459,7 +459,8 @@ class Player(Sprite):
         self.shieldregen()
         self.breathhold()
         self.terminal_velocity()
-        self.gravity()
+        if not key[K_UP]:
+            self.gravity()
         self.move()
         self.reset_values()
 

@@ -46,7 +46,6 @@ window.player_animations.animations["run_left"] = Animation(superblock.sequences
 window.player_animations.animations["stand_left"] = Animation(superblock.sequences["stand_left"],4,"loop")
 window.player_animations.animations["stand_right"] = Animation(superblock.sequences["stand_right"],4,"loop")
 
-
 window.player_animations.set_active_animation("stand_right")
 
 window.start()
